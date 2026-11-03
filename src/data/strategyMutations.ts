@@ -254,7 +254,7 @@ export function setDecisionArchived(d: Dataset, id: ID, archived: boolean): void
 /* ───────────────────────── Risks ───────────────────────── */
 
 export function blankRisk(clientId: ID, defaults: Partial<Risk> = {}): Risk {
-  return { id: newId('risk'), ...base(), clientId, kind: 'risk', title: '', description: '', severity: 'not_assessed', ownerId: null, projectId: null, workstreamId: null, initiativeId: null, status: 'open', mitigation: '', confidentiality: 'internal', ...defaults };
+  return { id: newId('risk'), ...base(), clientId, kind: 'risk', title: '', description: '', severity: 'not_assessed', ownerId: null, projectId: null, workstreamId: null, initiativeId: null, meetingId: null, status: 'open', mitigation: '', confidentiality: 'internal', ...defaults };
 }
 
 export function upsertRisk(d: Dataset, r: Risk): void {
@@ -268,6 +268,7 @@ export function upsertRisk(d: Dataset, r: Risk): void {
 }
 
 export function deleteRisk(d: Dataset, id: ID): void {
+  if (d.risks.find((x) => x.id === id)?.meetingId) throw new IntegrityError('This issue was flagged in a meeting. Close it instead so the meeting record stays complete.');
   d.risks = d.risks.filter((x) => x.id !== id);
 }
 

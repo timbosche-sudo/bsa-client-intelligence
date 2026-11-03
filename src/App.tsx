@@ -12,6 +12,8 @@ import { ImportPage } from '@/features/import/ImportPage';
 import { InitiativeDetailPage } from '@/features/strategy/InitiativeDetailPage';
 import { WorkstreamsPage } from '@/features/workstreams/WorkstreamsPage';
 import { MeetingsPage } from '@/features/meetings/MeetingsPage';
+import { MeetingRecordPage } from '@/features/meetings/MeetingRecordPage';
+import { MeetingModePage } from '@/features/meetings/MeetingModePage';
 import { ActionsDecisionsPage } from '@/features/actions/ActionsDecisionsPage';
 import { ReportsPage } from '@/features/reports/ReportsPage';
 import { AdminPage } from '@/features/admin/AdminPage';
@@ -52,6 +54,8 @@ function RouteError() {
 const router = createHashRouter([
   { path: '/', element: <RootRedirect />, errorElement: <RouteError /> },
   { path: '/setup', element: <NoClients /> },
+  // Meeting Mode is a focus view outside the app shell (no sidebar).
+  { path: '/c/:clientId/meetings/:meetingId/run', element: <MeetingModePage />, errorElement: <RouteError /> },
   {
     path: '/c/:clientId',
     element: <AppShell />,
@@ -66,6 +70,7 @@ const router = createHashRouter([
       { path: 'workstreams', element: <WorkstreamsPage /> },
       { path: 'initiatives/:initiativeId', element: <InitiativeDetailPage /> },
       { path: 'meetings', element: <MeetingsPage /> },
+      { path: 'meetings/:meetingId', element: <MeetingRecordPage /> },
       { path: 'actions', element: <ActionsDecisionsPage /> },
       { path: 'reports', element: <ReportsPage /> },
       { path: 'admin', element: <AdminPage /> },

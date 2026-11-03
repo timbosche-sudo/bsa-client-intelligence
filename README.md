@@ -12,8 +12,8 @@ Strategic client leadership and portfolio management platform for **BSA** Client
 | 1 | Platform foundation, design system, shell, Client Overview, domain model, local persistence | ✅ Complete |
 | 2 | Leadership & people, headshots, portfolio cards/table/detail, images, JSON + Excel/CSV import, BSA brand standards | ✅ Complete |
 | 3 | Workstreams, initiatives, actions, decisions, risks, restart checklists, accountability views | ✅ Complete |
-| 4 | Guided Meeting Mode | Next |
-| 5 | Reporting (PDF) and AI interface | |
+| 4 | Guided Meeting Mode: creation, templates, facilitation, closeout, finalization, history | ✅ Complete |
+| 5 | Reporting (PDF) and AI interface | Next |
 | 6 | Administration, backup/restore, QA, PWA, deployment hardening | |
 
 ## Local development
@@ -53,6 +53,20 @@ GitHub Pages sites are **public**. Only publish the fictional demo dataset.
 - **Decisions** are separate from actions. *Approved* requires a recorded approver and date, and *Superseded* requires the replacing decision. Approved decisions can be archived but never deleted.
 - **Accountability**: commitments by person and by workstream, and an individual view of everything a person is accountable for, supports or is consulted on.
 - **Restart checklists**: apply a template (such as the 8-consideration hospital restart template) to a project only after recording who confirmed its identity and scope. Includes program comparison, change log and leadership summary tools. Templates are managed in *Administration*.
+
+## Guided Meeting Mode (Stage 4)
+
+- **Plan**: create a meeting from a template (the 60-minute Client Team Kickoff is built in) or a blank agenda. Title, date and time, location, facilitator, attendees, objectives, workstreams, and every agenda topic and duration are editable. An edited agenda can be saved as a template.
+- **Facilitate** (*Start meeting*): a focus view built for iPad, with no sidebar.
+  - Agenda list with progress, free navigation and large Previous/Next controls.
+  - Per-topic notes that autosave, with a visible save status.
+  - One-tap **+ Action**, **+ Decision** and **Flag issue**.
+  - Panels showing what's been captured, carried-over open actions, pending decisions and context.
+  - An elapsed-vs-planned timer, and the screen is kept awake where supported.
+- **Close out** (*End meeting*): review topics discussed, confirmed and proposed decisions, new actions with owners and due dates (gaps flagged), unresolved issues, upcoming milestones, and rule-based next-topic suggestions; then write a summary.
+- **Finalize**: requires naming the approver and an explicit review acknowledgement. The record is frozen as a snapshot. Later changes to actions or decisions don't rewrite it, and the record shows what has changed since.
+- **Amend**: a finalized record can only change through a recorded amendment (reason and requester) and must then be finalized again. The amendment history is kept.
+- **History & continuity**: a chronological archive, "since the previous meeting" changes, carried-over actions, and *Schedule next meeting* carrying the agreed topics forward.
 
 ## Importing projects
 

@@ -30,7 +30,7 @@ export function ActionRow({ ws, action: a, onOpen, showLinks = true }: { ws: Cli
     run((d) => setActionStatus(d, a.id, status), { clientId: ws.client.id, entity: 'action', entityId: a.id, summary: `"${a.title}" → ${ACTION_STATUS_LABELS[status]}` });
   };
   return (
-    <li className={cn('flex flex-col gap-3 px-4 py-3.5 sm:flex-row sm:items-center sm:gap-4 sm:px-5', overdue && 'border-l-2 border-l-bsa-yellow')}>
+    <li className={cn('flex flex-col gap-3 px-4 py-3.5 @xl:flex-row @xl:items-center @xl:gap-4 @xl:px-5', overdue && 'border-l-2 border-l-bsa-yellow')}>
       <button type="button" onClick={onOpen} className="flex min-h-11 min-w-0 flex-1 items-start gap-3 text-left">
         <PersonAvatar person={owner} size="sm" className="mt-0.5" />
         <span className="min-w-0">
@@ -47,7 +47,7 @@ export function ActionRow({ ws, action: a, onOpen, showLinks = true }: { ws: Cli
           </span>
         </span>
       </button>
-      <div className="flex items-center gap-2 pl-11 sm:pl-0">
+      <div className="flex items-center gap-2 pl-11 @xl:pl-0">
         <PriorityBadge priority={a.priority} />
         {a.confidentiality !== 'internal' && <ConfidentialityBadge level={a.confidentiality} />}
         <select
@@ -68,7 +68,7 @@ export function ActionRow({ ws, action: a, onOpen, showLinks = true }: { ws: Cli
 export function ActionList({ ws, actions, onOpen, empty = 'No actions', showLinks }: { ws: ClientWorkspace; actions: ActionItem[]; onOpen(id: string): void; empty?: string; showLinks?: boolean }) {
   if (!actions.length) return <EmptyState compact title={empty} className="py-6" />;
   return (
-    <ul className="divide-y divide-line">
+    <ul className="@container divide-y divide-line">
       {actions.map((a) => (
         <ActionRow key={a.id} ws={ws} action={a} onOpen={() => onOpen(a.id)} showLinks={showLinks} />
       ))}
@@ -81,14 +81,14 @@ export function ActionList({ ws, actions, onOpen, empty = 'No actions', showLink
 export function DecisionList({ ws, decisions, onOpen, empty = 'No decisions' }: { ws: ClientWorkspace; decisions: Decision[]; onOpen(id: string): void; empty?: string }) {
   if (!decisions.length) return <EmptyState compact title={empty} className="py-6" />;
   return (
-    <ul className="divide-y divide-line">
+    <ul className="@container divide-y divide-line">
       {decisions.map((d) => {
         const owner = ws.people.find((p) => p.id === d.ownerId);
         const approver = ws.people.find((p) => p.id === d.approval?.approvedById);
         const links = linkLabels(ws, d);
         return (
           <li key={d.id}>
-            <button type="button" onClick={() => onOpen(d.id)} className="flex min-h-14 w-full flex-col gap-2 px-4 py-3.5 text-left hover:bg-surface-2 sm:flex-row sm:items-center sm:gap-4 sm:px-5">
+            <button type="button" onClick={() => onOpen(d.id)} className="flex min-h-14 w-full flex-col gap-2 px-4 py-3.5 text-left hover:bg-surface-2 @xl:flex-row @xl:items-center @xl:gap-4 @xl:px-5">
               <span className="min-w-0 flex-1">
                 <span className={cn('block text-sm font-bold', d.status === 'superseded' && 'text-muted line-through')}>{d.title}</span>
                 <span className="mt-0.5 block text-xs text-subtle">
@@ -118,14 +118,14 @@ const severityTone = { critical: 'negative', high: 'negative', medium: 'caution'
 export function RiskList({ ws, risks, onOpen, empty = 'Nothing recorded' }: { ws: ClientWorkspace; risks: Risk[]; onOpen(id: string): void; empty?: string }) {
   if (!risks.length) return <EmptyState compact title={empty} className="py-6" />;
   return (
-    <ul className="divide-y divide-line">
+    <ul className="@container divide-y divide-line">
       {risks.map((r) => {
         const Icon = r.kind === 'opportunity' ? Lightbulb : r.kind === 'issue' ? ShieldAlert : AlertTriangle;
         const owner = ws.people.find((p) => p.id === r.ownerId);
         const links = linkLabels(ws, r);
         return (
           <li key={r.id}>
-            <button type="button" onClick={() => onOpen(r.id)} className="flex min-h-14 w-full flex-col gap-2 px-4 py-3.5 text-left hover:bg-surface-2 sm:flex-row sm:items-center sm:gap-4 sm:px-5">
+            <button type="button" onClick={() => onOpen(r.id)} className="flex min-h-14 w-full flex-col gap-2 px-4 py-3.5 text-left hover:bg-surface-2 @xl:flex-row @xl:items-center @xl:gap-4 @xl:px-5">
               <span className="flex min-w-0 flex-1 gap-3">
                 <span className={cn('flex size-8 shrink-0 items-center justify-center rounded-full', r.kind === 'opportunity' ? 'bg-accent-soft text-accent' : 'bg-surface-3 text-caution')}>
                   <Icon size={15} aria-hidden />
@@ -138,7 +138,7 @@ export function RiskList({ ws, risks, onOpen, empty = 'Nothing recorded' }: { ws
                   </span>
                 </span>
               </span>
-              <span className="flex flex-wrap gap-2 pl-11 sm:pl-0">
+              <span className="flex flex-wrap gap-2 pl-11 @xl:pl-0">
                 {r.confidentiality !== 'internal' && <ConfidentialityBadge level={r.confidentiality} />}
                 <Badge tone={severityTone[r.severity]}>{SEVERITY_LABELS[r.severity]}</Badge>
               </span>

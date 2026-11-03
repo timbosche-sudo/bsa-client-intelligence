@@ -43,6 +43,7 @@ export function RiskSheet({ ws, riskId, defaults, onClose }: { ws: ClientWorkspa
             const res = run((d) => deleteRisk(d, r.id), { clientId: ws.client.id, entity: 'risk', entityId: r.id, summary: `Deleted "${r.title}"` });
             if (res.ok) onClose();
           }}
+          deleteBlockers={existing?.meetingId ? ['Flagged in a meeting — set its status to Closed instead.'] : []}
         />
       }
     >

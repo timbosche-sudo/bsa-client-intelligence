@@ -351,6 +351,8 @@ export interface Risk extends BaseRecord, ClientScoped {
   projectId: ID | null;
   workstreamId: ID | null;
   initiativeId: ID | null;
+  /** Set when flagged during a meeting. */
+  meetingId: ID | null;
   status: 'open' | 'monitoring' | 'closed';
   mitigation: string;
   confidentiality: Confidentiality;
@@ -450,24 +452,75 @@ export interface MeetingTemplate extends BaseRecord {
   clientId: ID | null;
   name: string;
   description: string;
+  objectives: string[];
   agenda: AgendaItem[];
 }
 
 export type MeetingStatus = 'scheduled' | 'in_progress' | 'closeout' | 'finalized' | 'cancelled';
 
+export type AgendaItemStatus = 'pending' | 'discussed' | 'skipped';
+
+export interface AgendaItemState {
+  status: AgendaItemStatus;
+  /** When the facilitator first opened this item (for pacing). */
+  startedAt: ISODateTime | null;
+}
+
+/**
+ * Immutable snapshot taken at finalization. Later edits to actions or decisions do not change
+ * what the meeting recorded; the live records remain linked by id.
+ */
+export interface MeetingRecordSnapshot {
+  finalizedAt: ISODateTime;
+  finalizedBy: string;
+  attendees: string[];
+  facilitator: string | null;
+  topics: { title: string; status: AgendaItemStatus; notes: string }[];
+  generalNotes: string;
+  summary: string;
+  actions: { id: ID; title: string; owner: string | null; dueDate: ISODate | null; status: string }[];
+  decisions: { id: ID; title: string; status: string; approvedBy: string | null }[];
+  issues: { id: ID; title: string; severity: string; status: string }[];
+  carriedOver: { id: ID; title: string; owner: string | null; status: string }[];
+  nextMeetingTopics: string[];
+}
+
+export interface MeetingAmendment {
+  id: ID;
+  reason: string;
+  requestedBy: string;
+  startedAt: ISODateTime;
+  /** Set when the amended record is finalized again. */
+  completedAt: ISODateTime | null;
+}
+
 export interface Meeting extends BaseRecord, ClientScoped {
   title: string;
   startsAt: ISODateTime | null;
+  location: string;
   facilitatorId: ID | null;
   attendeeIds: ID[];
   objectives: string[];
   workstreamIds: ID[];
   templateId: ID | null;
   agenda: AgendaItem[];
+  /** Facilitator notes per agenda item id. */
   notes: Record<ID, string>;
+  generalNotes: string;
+  agendaState: Record<ID, AgendaItemState>;
+  currentAgendaItemId: ID | null;
   status: MeetingStatus;
+  startedAt: ISODateTime | null;
+  endedAt: ISODateTime | null;
+  /** Open actions brought into the meeting from before it started. */
+  carryoverActionIds: ID[];
+  summary: string;
+  nextMeetingTopics: string[];
   finalizedAt: ISODateTime | null;
   finalizedById: ID | null;
+  finalizedByName: string | null;
+  record: MeetingRecordSnapshot | null;
+  amendments: MeetingAmendment[];
 }
 
 /* ───────────────────────── Reports & activity ───────────────────────── */

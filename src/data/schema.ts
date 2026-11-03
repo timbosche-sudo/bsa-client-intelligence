@@ -3,7 +3,7 @@ import type { Dataset } from '@/domain/types';
 import { hospitalRestartTemplate } from '@/domain/checklistTemplates';
 
 /** Bump when the persisted Dataset shape changes, and add a migration below. */
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 4;
 
 /**
  * Structural envelope validation. Deep per-record validation is added with the editing forms
@@ -65,6 +65,27 @@ const migrations: Record<number, Migration> = {
       checklists: Array.isArray(d.checklists) ? d.checklists : [],
     };
   },
+  // v3 → v4: Guided Meeting Mode state, finalization snapshot and amendments (Stage 4).
+  3: (d) => ({
+    ...d,
+    risks: (d.risks as Record<string, unknown>[]).map((r) => ({ meetingId: null, ...r })),
+    meetingTemplates: (d.meetingTemplates as Record<string, unknown>[]).map((t) => ({ objectives: [], ...t })),
+    meetings: (d.meetings as Record<string, unknown>[]).map((m) => ({
+      location: '',
+      generalNotes: '',
+      agendaState: {},
+      currentAgendaItemId: null,
+      startedAt: null,
+      endedAt: null,
+      carryoverActionIds: [],
+      summary: '',
+      nextMeetingTopics: [],
+      finalizedByName: null,
+      record: null,
+      amendments: [],
+      ...m,
+    })),
+  }),
 };
 
 export class SchemaError extends Error {}

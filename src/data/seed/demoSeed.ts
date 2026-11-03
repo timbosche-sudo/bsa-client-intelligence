@@ -485,6 +485,7 @@ const risks: Risk[] = [
     projectId: null,
     workstreamId: 'ws_hm_4',
     initiativeId: 'init_hm_3',
+    meetingId: null,
     status: 'open',
     mitigation: '',
     confidentiality: 'internal',
@@ -500,6 +501,7 @@ const risks: Risk[] = [
     projectId: null,
     workstreamId: 'ws_hm_5',
     initiativeId: 'init_hm_4',
+    meetingId: null,
     status: 'open',
     mitigation: '',
     confidentiality: 'internal',
@@ -541,6 +543,12 @@ const meetingTemplates: MeetingTemplate[] = [
     clientId: HM,
     name: 'Client Team Kickoff (60 min)',
     description: 'Activates the Client Team: shared purpose, current state, attention areas, leadership and cadence.',
+    objectives: [
+      'Align on the purpose of the Houston Methodist Client Team',
+      'Surface what needs attention across the five workstreams',
+      'Identify leaders, champions and accountable owners',
+      'Agree the operating cadence and escalation path',
+    ],
     agenda: [
       { id: 'ag_1', title: 'Why We Are Here', minutes: 5, purpose: 'Explain the strategic Client Team activation objective.', prompts: [] },
       { id: 'ag_2', title: 'Current State', minutes: 10, purpose: 'Relationship overview, anticipated project restarts, major opportunities.', prompts: [] },

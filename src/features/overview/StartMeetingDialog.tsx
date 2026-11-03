@@ -1,48 +1,76 @@
-import { Clock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { CalendarPlus, Clock, Play } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Button } from '@/components/ui/Button';
 import { Dialog } from '@/components/ui/Dialog';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { StageNotice } from '@/components/ui/StageNotice';
-import type { ClientWorkspace } from '@/data/repository';
+import { startMeeting } from '@/data/meetingMutations';
+import { agendaMinutes, meetingTime } from '@/data/meetingSelectors';
+import { active, type ClientWorkspace } from '@/data/repository';
+import { formatDateTime } from '@/lib/format';
+import { run } from '@/state/actions';
 
-/** Stage 1: previews the meeting template. Live facilitation (Meeting Mode) is delivered in Stage 4. */
+/** Start Meeting: resume a running meeting, start a scheduled one, or plan a new one from a template. */
 export function StartMeetingDialog({ open, onClose, ws }: { open: boolean; onClose(): void; ws: ClientWorkspace }) {
-  const template = ws.meetingTemplates[0];
-  const total = template?.agenda.reduce((s, a) => s + a.minutes, 0) ?? 0;
+  const navigate = useNavigate();
+  const meetings = active(ws.meetings);
+  const running = meetings.filter((m) => m.status === 'in_progress');
+  const scheduled = meetings.filter((m) => m.status === 'scheduled').sort((a, b) => meetingTime(a).localeCompare(meetingTime(b)));
+  const templates = active(ws.meetingTemplates);
+  const go = (path: string) => (onClose(), navigate(path));
+  const base = `/c/${ws.client.id}/meetings`;
+
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      title="Start Meeting"
-      description={template ? `${template.name} · ${total} minutes` : undefined}
-      size="md"
-      footer={
-        <Link to={`/c/${ws.client.id}/meetings`} onClick={onClose} className="inline-flex h-11 items-center rounded-lg border border-line bg-surface-2 px-4 text-sm hover:border-line-strong">
-          Open Meetings
-        </Link>
-      }
-    >
-      <StageNotice stage={4} className="mb-4">
-        Guided Meeting Mode — live facilitation, notes, quick actions and closeout — is built in Stage 4. Review the agenda below to prepare.
-      </StageNotice>
-      {template ? (
-        <ol className="flex flex-col divide-y divide-line">
-          {template.agenda.map((a, i) => (
-            <li key={a.id} className="flex gap-4 py-3">
-              <span className="tabular w-6 pt-0.5 text-xs font-semibold text-accent">{String(i + 1).padStart(2, '0')}</span>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium">{a.title}</p>
-                <p className="mt-0.5 text-sm text-muted">{a.purpose}</p>
-              </div>
-              <span className="tabular flex shrink-0 items-center gap-1 text-xs text-subtle">
-                <Clock size={12} aria-hidden /> {a.minutes} min
-              </span>
-            </li>
-          ))}
-        </ol>
-      ) : (
-        <EmptyState compact title="No meeting template for this client yet" />
-      )}
+    <Dialog open={open} onClose={onClose} title="Start Meeting" description={ws.client.name} size="md">
+      <div className="flex flex-col gap-5">
+        {running.length > 0 && (
+          <section>
+            <p className="eyebrow mb-2 text-ink">In progress</p>
+            <ul className="flex flex-col gap-2">
+              {running.map((m) => (
+                <li key={m.id}><Button variant="primary" className="w-full justify-start" icon={<Play size={16} />} onClick={() => go(`${base}/${m.id}/run`)}>Resume “{m.title}”</Button></li>
+              ))}
+            </ul>
+          </section>
+        )}
+        {scheduled.length > 0 && (
+          <section>
+            <p className="eyebrow mb-2 text-ink">Scheduled</p>
+            <ul className="flex flex-col divide-y divide-line rounded-lg border border-line">
+              {scheduled.slice(0, 4).map((m) => (
+                <li key={m.id} className="flex items-center gap-3 px-3 py-2.5">
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-sm font-bold">{m.title}</span>
+                    <span className="flex items-center gap-1 text-xs text-subtle"><Clock size={12} aria-hidden />{m.startsAt ? formatDateTime(m.startsAt) : 'Time TBC'} · {agendaMinutes(m.agenda)} min</span>
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="primary"
+                    icon={<Play size={14} />}
+                    onClick={() => {
+                      const r = run((d) => startMeeting(d, m.id), { clientId: ws.client.id, entity: 'meeting', entityId: m.id, summary: `Started meeting "${m.title}"` }, false);
+                      if (r.ok) go(`${base}/${m.id}/run`);
+                    }}
+                  >
+                    Start
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        <section>
+          <p className="eyebrow mb-2 text-ink">Plan a new meeting</p>
+          <ul className="flex flex-col gap-2">
+            {templates.map((t) => (
+              <li key={t.id}>
+                <Button className="w-full justify-start" icon={<CalendarPlus size={16} />} onClick={() => go(`${base}?new=1&template=${t.id}`)}>
+                  {t.name} · {agendaMinutes(t.agenda)} min
+                </Button>
+              </li>
+            ))}
+            <li><Button variant="ghost" className="w-full justify-start" icon={<CalendarPlus size={16} />} onClick={() => go(`${base}?new=1&template=none`)}>Blank agenda</Button></li>
+          </ul>
+        </section>
+      </div>
     </Dialog>
   );
 }

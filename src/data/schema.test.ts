@@ -29,7 +29,7 @@ describe('v1 → v2 migration', () => {
     (v1.people as Record<string, unknown>[]).forEach((p) => delete p.homeClientId);
     (v1.projects as Record<string, unknown>[]).forEach((p) => delete p.documentLinks);
     const migrated = migrate(v1);
-    expect(migrated.schemaVersion).toBe(3);
+    expect(migrated.schemaVersion).toBe(4);
     expect(migrated.media).toEqual([]);
     expect(migrated.people.every((p) => p.homeClientId === null)).toBe(true);
     expect(migrated.projects.every((p) => Array.isArray(p.documentLinks))).toBe(true);
@@ -46,11 +46,26 @@ describe('v2 → v3 migration', () => {
     for (const k of ['initiatives', 'actions', 'decisions']) (v2[k] as Record<string, unknown>[]).forEach((r) => (delete r.consultedIds, delete r.informedIds));
     (v2.risks as Record<string, unknown>[]).forEach((r) => delete r.initiativeId);
     const m = migrate(v2);
-    expect(m.schemaVersion).toBe(3);
+    expect(m.schemaVersion).toBe(4);
     expect(m.actions.every((a) => Array.isArray(a.consultedIds) && Array.isArray(a.informedIds))).toBe(true);
     expect(m.risks.every((r) => r.initiativeId === null)).toBe(true);
     expect(m.checklistTemplates.map((t) => t.items.length)).toEqual([8]);
     expect(m.checklists).toEqual([]);
+  });
+});
+
+describe('v3 → v4 migration', () => {
+  it('adds meeting-mode fields to existing meetings and risks', () => {
+    const v3 = structuredClone(createDemoSeed()) as unknown as Record<string, unknown>;
+    v3.schemaVersion = 3;
+    (v3.risks as Record<string, unknown>[]).forEach((r) => delete r.meetingId);
+    (v3.meetingTemplates as Record<string, unknown>[]).forEach((t) => delete t.objectives);
+    v3.meetings = [{ id: 'm1', clientId: 'client_houston_methodist', title: 'Old', startsAt: null, facilitatorId: null, attendeeIds: [], objectives: [], workstreamIds: [], templateId: null, agenda: [], notes: {}, status: 'scheduled', finalizedAt: null, finalizedById: null, createdAt: '', updatedAt: '', archivedAt: null }];
+    const m = migrate(v3);
+    expect(m.schemaVersion).toBe(4);
+    expect(m.risks.every((r) => r.meetingId === null)).toBe(true);
+    expect(m.meetings[0]).toMatchObject({ title: 'Old', agendaState: {}, amendments: [], record: null, carryoverActionIds: [] });
+    expect(m.meetingTemplates.every((t) => Array.isArray(t.objectives))).toBe(true);
   });
 });
 

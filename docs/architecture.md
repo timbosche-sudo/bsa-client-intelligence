@@ -45,6 +45,13 @@ Image binaries are kept out of the JSON dataset. `MediaRecord` metadata (owner, 
 Uploads are validated (JPEG/PNG/WebP, ≤15 MB), then resized (headshots 600×600 square crop; project images ≤2400 px on the long edge)
 and compressed to WebP (JPEG fallback). Backups embed the bytes as base64.
 
+## Meeting lifecycle
+
+`scheduled → in_progress → closeout → finalized` (or `cancelled`). Meeting Mode lives at `#/c/:clientId/meetings/:id/run`, outside the app shell.
+Notes autosave with a debounce and are not written to the activity log, to avoid noise. Finalization stores an immutable `MeetingRecordSnapshot`.
+Finalized meetings reject edits in the data layer, and amendments reopen closeout with a recorded reason.
+Actions, decisions and issues captured in a meeting carry `meetingId` and cannot be deleted, only cancelled or closed.
+
 ## Accountability model
 
 Owner/champion = **Accountable**; participants = **Supporting**; optional `consultedIds` / `informedIds` complete a lightweight RACI.
@@ -75,7 +82,7 @@ the user is offered a download of it first.
 |---|---|
 | 2 ✅ | IndexedDB media store behind `MediaStore`; people/leadership/project editing; JSON/Excel/CSV import pipeline (`features/import`: parsers → candidates → preview → approved commit) |
 | 3 ✅ | `data/strategyMutations.ts` (workstreams, initiatives, actions, decisions, risks, checklists with integrity rules), `data/accountability.ts` (person / workstream views), `features/strategy` (shared record editors via `useRecordSheet`), schema v3 |
-| 4 | Meeting Mode, autosaved meeting drafts, finalization and amendments |
+| 4 ✅ | `data/meetingMutations.ts` (lifecycle scheduled → in_progress → closeout → finalized, snapshot, amendments), `data/meetingSelectors.ts` (captures, continuity, rule-based suggestions), `features/meetings` (Meeting Mode route outside the app shell), schema v4 |
 | 5 | Report builders on `ClientWorkspace`, client-side PDF, confidentiality filtering, `AiProvider` interface (disabled by default) |
 | 6 | Restore with preview, admin configuration, service worker, accessibility/performance QA |
 

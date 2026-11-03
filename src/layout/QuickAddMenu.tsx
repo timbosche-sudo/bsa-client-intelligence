@@ -3,9 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { StageTag } from '@/components/ui/StageNotice';
 import { usePopover } from '@/lib/usePopover';
 
-const PENDING = [
-  { label: 'Meeting', icon: CalendarPlus, stage: 4 },
-];
+const PENDING: { label: string; icon: typeof CalendarPlus; stage: number }[] = [];
 
 /** Quick-add entry point. Items whose editors are not built yet are shown as disabled with their stage. */
 export function QuickAddMenu({ clientId }: { clientId: string }) {
@@ -44,6 +42,7 @@ export function QuickAddMenu({ clientId }: { clientId: string }) {
             { label: 'Action', icon: ClipboardPlus, to: `/c/${clientId}/actions?new=action` },
             { label: 'Decision', icon: Gavel, to: `/c/${clientId}/actions?tab=decisions&new=decision` },
             { label: 'Risk or issue', icon: ShieldPlus, to: `/c/${clientId}/actions?tab=risks&new=risk` },
+            { label: 'Meeting', icon: CalendarPlus, to: `/c/${clientId}/meetings?new=1` },
           ].map(({ label, icon: Icon, to }) => (
             <button
               key={label}

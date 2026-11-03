@@ -12,13 +12,16 @@ interface Props {
   onSave(): void;
   archived?: boolean;
   onArchiveToggle?(): void;
+  /** Overrides the archive button label (e.g. "Cancel meeting"). */
+  archiveLabel?: string;
+  cancelLabel?: string;
   onDelete?(): void;
   /** References that block deletion (shown instead of the delete confirmation). */
   deleteBlockers?: string[];
 }
 
 /** Consistent footer for record sheets: save, archive/restore, and guarded permanent delete. */
-export function SheetFooter({ isNew, noun, error, onCancel, onSave, archived, onArchiveToggle, onDelete, deleteBlockers = [] }: Props) {
+export function SheetFooter({ isNew, noun, error, onCancel, onSave, archived, onArchiveToggle, archiveLabel, cancelLabel = 'Cancel', onDelete, deleteBlockers = [] }: Props) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   return (
     <>
@@ -27,7 +30,7 @@ export function SheetFooter({ isNew, noun, error, onCancel, onSave, archived, on
         <div className="mr-auto flex gap-1">
           {onArchiveToggle && (
             <Button size="sm" variant="ghost" icon={archived ? <ArchiveRestore size={15} /> : <Archive size={15} />} onClick={onArchiveToggle}>
-              {archived ? 'Restore' : 'Archive'}
+              {archiveLabel ?? (archived ? 'Restore' : 'Archive')}
             </Button>
           )}
           {onDelete && (
@@ -37,7 +40,7 @@ export function SheetFooter({ isNew, noun, error, onCancel, onSave, archived, on
           )}
         </div>
       )}
-      <Button variant="ghost" onClick={onCancel}>Cancel</Button>
+      <Button variant="ghost" onClick={onCancel}>{cancelLabel}</Button>
       <Button variant="primary" onClick={onSave}>{isNew ? `Add ${noun}` : 'Save changes'}</Button>
       {onDelete && (
         <ConfirmDialog
