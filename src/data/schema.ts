@@ -2,7 +2,7 @@ import { z } from 'zod';
 import type { Dataset } from '@/domain/types';
 
 /** Bump when the persisted Dataset shape changes, and add a migration below. */
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 
 /**
  * Structural envelope validation. Deep per-record validation is added with the editing forms
@@ -29,13 +29,22 @@ export const datasetEnvelope = z.object({
   meetingTemplates: z.array(record),
   meetings: z.array(scoped),
   reports: z.array(scoped),
+  media: z.array(record.extend({ ownerId: z.string().min(1), ownerType: z.enum(['person', 'project']) })),
   activity: z.array(z.object({ id: z.string() }).passthrough()),
 });
 
 type Migration = (data: Record<string, unknown>) => Record<string, unknown>;
 
 /** migrations[n] upgrades a dataset from version n to n + 1. */
-const migrations: Record<number, Migration> = {};
+const migrations: Record<number, Migration> = {
+  // v1 → v2: introduce media metadata collection (Stage 2).
+  1: (d) => ({
+    ...d,
+    media: Array.isArray(d.media) ? d.media : [],
+    people: (d.people as Record<string, unknown>[]).map((p) => ({ homeClientId: null, ...p })),
+    projects: (d.projects as Record<string, unknown>[]).map((p) => ({ documentLinks: [], ...p })),
+  }),
+};
 
 export class SchemaError extends Error {}
 

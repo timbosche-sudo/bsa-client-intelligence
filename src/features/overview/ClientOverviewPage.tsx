@@ -229,14 +229,13 @@ function Hero({ ws, onStartMeeting }: { ws: ClientWorkspace; onStartMeeting(): v
   const leadPerson = ws.people.find((p) => p.id === ws.client.relationshipLeadId);
   return (
     <Card className="relative mb-8 overflow-hidden">
-      <div className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full bg-accent/10 blur-3xl" aria-hidden />
       <div className="relative flex flex-col gap-6 p-5 sm:p-7 lg:flex-row lg:items-end lg:justify-between">
         <div className="min-w-0">
           <div className="mb-3 flex flex-wrap items-center gap-2">
             <p className="eyebrow">Client Overview</p>
             <Badge tone={ws.client.status === 'active' ? 'accent' : 'outline'}>{CLIENT_STATUS_LABELS[ws.client.status]}</Badge>
           </div>
-          <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">{ws.client.name}</h1>
+          <h1 className="text-3xl font-black tracking-tight sm:text-[40px] sm:leading-tight">{ws.client.name}</h1>
           {ws.client.sector && <p className="mt-1.5 text-sm text-subtle">{ws.client.sector}</p>}
           {ws.client.summary && <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted sm:text-[15px]">{ws.client.summary}</p>}
 
@@ -273,10 +272,10 @@ function Hero({ ws, onStartMeeting }: { ws: ClientWorkspace; onStartMeeting(): v
 
 function Question({ n, title }: { n: number; title: string }) {
   return (
-    <div className="mb-4 flex items-baseline gap-3">
-      <span className="tabular text-xs font-semibold text-accent">0{n}</span>
-      <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
-      <span className="h-px flex-1 bg-line" aria-hidden />
+    <div className="mb-4 flex items-center gap-3">
+      <span className="tabular flex size-7 shrink-0 items-center justify-center rounded-full border border-line-strong text-[11px] font-bold text-ink">{n}</span>
+      <h2 className="text-lg font-black tracking-tight">{title}</h2>
+      <span className="h-px flex-1 bg-line-strong" aria-hidden />
     </div>
   );
 }
@@ -288,7 +287,7 @@ function Stat({ label, value, note, to, tone }: { label: string; value: string; 
         {label}
         <ArrowUpRight size={13} className="opacity-0 transition-opacity group-hover:opacity-100" aria-hidden />
       </p>
-      <p className="tabular mt-2 text-2xl font-semibold tracking-tight sm:text-[26px]">{value}</p>
+      <p className="tabular mt-2 text-2xl font-black tracking-tight sm:text-[28px]">{value}</p>
       <p className={`mt-1 text-xs ${tone === 'caution' ? 'text-caution' : 'text-subtle'}`}>{note}</p>
     </Link>
   );

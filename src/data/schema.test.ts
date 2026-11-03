@@ -21,6 +21,22 @@ describe('schema migration & validation', () => {
   });
 });
 
+describe('v1 → v2 migration', () => {
+  it('adds media, person homeClientId and project documentLinks without losing data', () => {
+    const v1 = structuredClone(createDemoSeed()) as unknown as Record<string, unknown>;
+    v1.schemaVersion = 1;
+    delete v1.media;
+    (v1.people as Record<string, unknown>[]).forEach((p) => delete p.homeClientId);
+    (v1.projects as Record<string, unknown>[]).forEach((p) => delete p.documentLinks);
+    const migrated = migrate(v1);
+    expect(migrated.schemaVersion).toBe(2);
+    expect(migrated.media).toEqual([]);
+    expect(migrated.people.every((p) => p.homeClientId === null)).toBe(true);
+    expect(migrated.projects.every((p) => Array.isArray(p.documentLinks))).toBe(true);
+    expect(migrated.projects).toHaveLength(createDemoSeed().projects.length);
+  });
+});
+
 describe('LocalStorageAdapter', () => {
   it('round-trips the dataset', async () => {
     localStorage.clear();

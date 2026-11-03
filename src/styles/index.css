@@ -1,63 +1,95 @@
-@import '@fontsource-variable/inter';
+@import '@fontsource/lato/400.css';
+@import '@fontsource/lato/400-italic.css';
+@import '@fontsource/lato/700.css';
+@import '@fontsource/lato/900.css';
 @import 'tailwindcss';
 
 /*
- * BSA Intelligence design tokens.
- * TEMPORARY: derived from the written brand direction (charcoal foundation, white/gray type,
- * restrained cyan-teal accent). Replace with the official BSA Intelligence Design System values
- * when they are supplied — only this block needs to change.
+ * BSA brand tokens — source: BSA Brand Style Guide 2026 (Color pp.19–23, Typography pp.24–25).
+ *
+ * Primary:   Red #cc1b2d · White #ffffff · Teal #56b1bf · Grey #9ea09f · Black #000000
+ * Secondary: Purple #782076 · Navy #2f496e · Dark Teal #3a7f8a · Light Blue #507cba · Green #2bb673 · Yellow #fdba63
+ * Grey tones (Black %): 100 #000000 · 80 #58595b · 50 #939598 · 25 #c7c8ca · 10 #e6e7e8
+ *
+ * Backgrounds are limited to black or white (dark/light theme). Raised surfaces are white screens over
+ * black (approved "screens", p.23). Text on backgrounds is white or black; grey tones are used only for
+ * secondary text. Red is the brand signature (primary actions); teal is the interaction accent.
+ * Red is used as a FILL (with white text) — red text on black does not meet WCAG AA contrast.
  */
 :root,
 [data-theme='dark'] {
   color-scheme: dark;
-  --bg: #0a0b0d;
-  --surface: #111317;
-  --surface-2: #171a1f;
-  --surface-3: #1f2329;
-  --border: #252a31;
-  --border-strong: #353c45;
-  --text: #f3f5f6;
-  --text-muted: #a4adb6;
-  --text-subtle: #6e7781;
-  --accent: #34b6c2;
-  --accent-strong: #5fd0da;
-  --accent-soft: rgb(52 182 194 / 0.12);
-  --accent-contrast: #061113;
-  --positive: #5fb98d;
-  --caution: #d6a650;
-  --negative: #dc6e64;
-  --positive-soft: rgb(95 185 141 / 0.12);
-  --caution-soft: rgb(214 166 80 / 0.12);
-  --negative-soft: rgb(220 110 100 / 0.12);
-  --shadow: 0 1px 0 rgb(255 255 255 / 0.03) inset, 0 8px 24px rgb(0 0 0 / 0.35);
+  --bg: #000000;
+  --surface: #0d0d0d; /* white screen 5% over black */
+  --surface-2: #141414; /* white screen 8% */
+  --surface-3: #1f1f1f; /* white screen 12% */
+  --border: #2b2b2c;
+  --border-strong: #58595b; /* Black 80% */
+  --text: #ffffff;
+  --text-muted: #c7c8ca; /* Black 25% */
+  --text-subtle: #939598; /* Black 50% */
+  --accent: #56b1bf; /* Teal */
+  --accent-strong: #7bbdc8; /* Teal tint */
+  --accent-soft: rgb(86 177 191 / 0.16);
+  --accent-contrast: #000000;
+  --brand: #cc1b2d; /* BSA Red */
+  --brand-strong: #b31828;
+  --brand-contrast: #ffffff;
+  --positive: #2bb673; /* Green */
+  --caution: #fdba63; /* Yellow */
+  --negative: #cc1b2d; /* Red — fills only */
+  --positive-soft: rgb(43 182 115 / 0.16);
+  --caution-soft: rgb(253 186 99 / 0.16);
+  --negative-soft: rgb(204 27 45 / 0.22);
+  --shadow: 0 0 0 1px rgb(255 255 255 / 0.02);
 }
 
 [data-theme='light'] {
   color-scheme: light;
-  --bg: #f4f5f6;
+  --bg: #ffffff;
   --surface: #ffffff;
-  --surface-2: #f7f8f9;
-  --surface-3: #eceef1;
-  --border: #e1e4e8;
-  --border-strong: #cdd2d8;
-  --text: #121417;
-  --text-muted: #4d5560;
-  --text-subtle: #7a838d;
-  --accent: #0d7f8a;
-  --accent-strong: #0a6670;
-  --accent-soft: rgb(13 127 138 / 0.09);
+  --surface-2: #f3f3f4;
+  --surface-3: #e6e7e8; /* Black 10% */
+  --border: #dcdddf;
+  --border-strong: #c7c8ca; /* Black 25% */
+  --text: #000000;
+  --text-muted: #58595b; /* Black 80% */
+  --text-subtle: #6d6e71;
+  --accent: #3a7f8a; /* Dark Teal — Teal fails contrast on white */
+  --accent-strong: #2f6a73;
+  --accent-soft: rgb(86 177 191 / 0.16);
   --accent-contrast: #ffffff;
-  --positive: #2f8a5e;
-  --caution: #9b6c12;
-  --negative: #b8443a;
-  --positive-soft: rgb(47 138 94 / 0.1);
-  --caution-soft: rgb(155 108 18 / 0.1);
-  --negative-soft: rgb(184 68 58 / 0.1);
-  --shadow: 0 1px 2px rgb(16 24 40 / 0.05), 0 4px 16px rgb(16 24 40 / 0.05);
+  --brand: #cc1b2d;
+  --brand-strong: #b31828;
+  --brand-contrast: #ffffff;
+  --positive: #1d8653;
+  --caution: #9a6412;
+  --negative: #cc1b2d;
+  --positive-soft: rgb(43 182 115 / 0.14);
+  --caution-soft: rgb(253 186 99 / 0.28);
+  --negative-soft: rgb(204 27 45 / 0.1);
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.04);
 }
 
 @theme inline {
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Lato', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Architectural, near-square corners; circles stay perfect circles (brand p.27). */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+  --radius-2xl: 8px;
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-contrast: var(--brand-contrast);
+  --color-bsa-teal: #56b1bf;
+  --color-bsa-dark-teal: #3a7f8a;
+  --color-bsa-navy: #2f496e;
+  --color-bsa-light-blue: #507cba;
+  --color-bsa-purple: #782076;
+  --color-bsa-green: #2bb673;
+  --color-bsa-yellow: #fdba63;
+  --color-bsa-grey: #9ea09f;
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
@@ -88,7 +120,6 @@
   }
   body {
     @apply bg-bg text-ink font-sans antialiased;
-    font-feature-settings: 'cv11', 'ss01';
     min-height: 100dvh;
   }
   :focus-visible {
@@ -110,8 +141,13 @@
 }
 
 @layer components {
+  /* "ALL CAPS TITLES" — Lato Regular, 100 tracking (brand p.24) */
   .eyebrow {
-    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-subtle;
+    @apply text-[11px] font-normal uppercase tracking-[0.14em] text-subtle;
+  }
+  /* Headline / SubHead — Lato Black (brand p.24) */
+  .heading {
+    @apply font-black tracking-tight;
   }
   .tabular {
     font-variant-numeric: tabular-nums;

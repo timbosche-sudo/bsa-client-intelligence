@@ -2,7 +2,8 @@
 
 This document describes the **structure** of the Houston Methodist portfolio seed file (`Houston_Methodist_Portfolio_Seed.json`)
 and how it maps to the `Project` model in `src/domain/types.ts`. It deliberately contains **no values** from the file.
-The file itself must stay in `private-data/` (git-ignored) and is imported locally in Stage 2.
+The file itself must stay in `private-data/` (git-ignored). It is imported locally through *Portfolio Readiness → Import*,
+implemented in `src/features/import/importModel.ts` and tested with fictional fixtures (`src/test/fixtures.ts`).
 
 ## File structure
 
@@ -38,6 +39,14 @@ The file itself must stay in `private-data/` (git-ignored) and is imported local
 | `source_row` | `provenance.sourceRow` | Preserved. |
 | `source.filename / worksheet / extract_method / as_of` | `provenance.*` | Applied to every imported record, with `importedAt` and `importedBy`. |
 | `client.client_code` | `Client.clientCode` (validation only) | Project numbers begin with the client code. Used as an import sanity check and never overwritten silently. |
+
+## Import behaviour (Stage 2)
+
+- A dry run against the real file on the development machine produced 5 new projects, every principal matched to the
+  relationship lead's person record, warnings on the 2 records whose projections exceed the fee, and a missing-fee
+  note on the "various projects" record. Re-importing produced 5 matches with no changes.
+- Rows that already exist (same client + project number) default to **Skip**. Choosing **Update** overwrites only the
+  fields listed in the preview, and blank source values never erase data.
 
 ## Observations from inspection (to confirm with the data owner)
 

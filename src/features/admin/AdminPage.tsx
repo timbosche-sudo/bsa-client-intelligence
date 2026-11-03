@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Building2, Database, Download, History, Plus, RotateCcw, ShieldAlert, Upload } from 'lucide-react';
+import { Building2, Database, Download, History, ListOrdered, Plus, RotateCcw, ShieldAlert, Sparkles, Upload } from 'lucide-react';
 import { z } from 'zod';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -13,10 +13,15 @@ import { environment } from '@/config/environment';
 import { CLIENT_STATUS_LABELS } from '@/domain/labels';
 import { listClients } from '@/data/repository';
 import { Monogram } from '@/layout/ClientSelector';
-import { backupFilename, buildBackup, downloadJson } from '@/services/backup';
+import { exportFullBackup } from '@/services/exportBackup';
 import { formatBytes, formatDateTime } from '@/lib/format';
 import { useDataStore } from '@/state/store';
 import { useRequiredWorkspace } from '@/state/useWorkspace';
+import { mediaStore } from '@/data/media/MediaStore';
+import { orphanMediaIds } from '@/data/mutations';
+import { toast } from '@/state/toast';
+import { FieldError } from '@/components/form/fields';
+import { CategoriesSheet } from './CategoriesSheet';
 
 const clientSchema = z.object({
   name: z.string().trim().min(2, 'Enter the client name (at least 2 characters).').max(120),
@@ -33,11 +38,13 @@ const clientSchema = z.object({
 export function AdminPage() {
   const ws = useRequiredWorkspace();
   const data = useDataStore((s) => s.data)!;
-  const { adapter, lastSavedAt, resetToDemo, flush } = useDataStore();
+  const { adapter, lastSavedAt, resetToDemo } = useDataStore();
   const [params, setParams] = useSearchParams();
   const [formOpen, setFormOpen] = useState(params.get('newClient') === '1');
   const [resetOpen, setResetOpen] = useState(false);
   const [usage, setUsage] = useState<number | null>(null);
+  const [media, setMedia] = useState<{ count: number; orphans: string[]; quota: number | null; used: number | null } | null>(null);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const clients = listClients(data, { includeArchived: true });
 
   useEffect(() => {
@@ -52,10 +59,34 @@ export function AdminPage() {
     void adapter?.usage().then(setUsage);
   }, [adapter, data]);
 
-  const exportBackup = async () => {
-    await flush();
-    downloadJson(backupFilename(), buildBackup(useDataStore.getState().data!));
+  useEffect(() => {
+    let alive = true;
+    void (async () => {
+      const keys = await mediaStore().keys().catch(() => [] as string[]);
+      const est = await navigator.storage?.estimate?.().catch(() => null);
+      if (alive) setMedia({ count: keys.length, orphans: orphanMediaIds(data, keys), quota: est?.quota ?? null, used: est?.usage ?? null });
+    })();
+    return () => {
+      alive = false;
+    };
+  }, [data]);
+
+  const cleanOrphans = async () => {
+    if (!media?.orphans.length) return;
+    await Promise.all(media.orphans.map((id) => mediaStore().delete(id).catch(() => undefined)));
+    toast(`Removed ${media.orphans.length} unreferenced image(s) from browser storage.`);
+    setMedia({ ...media, count: media.count - media.orphans.length, orphans: [] });
   };
+
+  const resetAll = async () => {
+    const keys = await mediaStore().keys().catch(() => [] as string[]);
+    await Promise.all(keys.map((k) => mediaStore().delete(k).catch(() => undefined)));
+    await resetToDemo();
+    setResetOpen(false);
+    toast('All data in this browser was replaced with the demonstration data.');
+  };
+
+  const exportBackup = exportFullBackup;
 
   return (
     <>
@@ -92,9 +123,14 @@ export function AdminPage() {
               );
             })}
           </ul>
-          <p className="mt-3 flex flex-wrap items-center gap-2 text-xs text-subtle">
-            Editing client profiles, archiving and workspace configuration <StageTag stage={6} />
-          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-line pt-3">
+            <Button size="sm" icon={<ListOrdered size={15} aria-hidden />} onClick={() => setCategoriesOpen(true)}>
+              Portfolio categories — {ws.client.name}
+            </Button>
+            <p className="flex flex-wrap items-center gap-2 text-xs text-subtle">
+              Editing client profiles, archiving and other workspace configuration <StageTag stage={6} />
+            </p>
+          </div>
         </Panel>
 
         <Panel title="Data & backup" icon={<Database size={18} />}>
@@ -109,6 +145,11 @@ export function AdminPage() {
             <dd>{data.origin === 'demo-seed' ? 'Built-in demonstration data' : data.origin === 'restored' ? 'Restored from backup' : 'Empty workspace'}</dd>
             <dt className="text-subtle">Schema</dt>
             <dd className="tabular">v{data.schemaVersion}</dd>
+            <dt className="text-subtle">Images</dt>
+            <dd className="tabular">
+              {media ? `${media.count} stored${media.orphans.length ? ` (${media.orphans.length} unreferenced)` : ''}` : '…'}
+              {media?.used != null && media.quota ? ` · browser storage ${formatBytes(media.used)} of ${formatBytes(media.quota)}` : ''}
+            </dd>
           </dl>
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
             <Button variant="secondary" icon={<Download size={16} aria-hidden />} onClick={exportBackup}>
@@ -117,6 +158,11 @@ export function AdminPage() {
             <Button variant="secondary" disabled icon={<Upload size={16} aria-hidden />} title="Restore with preview is built in Stage 6">
               Restore from backup <StageTag stage={6} />
             </Button>
+            {!!media?.orphans.length && (
+              <Button variant="secondary" icon={<Sparkles size={16} aria-hidden />} onClick={() => void cleanOrphans()}>
+                Remove unreferenced images
+              </Button>
+            )}
             <Button variant="danger" icon={<RotateCcw size={16} aria-hidden />} onClick={() => setResetOpen(true)}>
               Reset to demo data
             </Button>
@@ -155,7 +201,8 @@ export function AdminPage() {
         </Panel>
       </div>
 
-      <ResetDialog open={resetOpen} onClose={() => setResetOpen(false)} onExport={exportBackup} onConfirm={async () => (await resetToDemo(), setResetOpen(false))} />
+      <ResetDialog open={resetOpen} onClose={() => setResetOpen(false)} onExport={exportBackup} onConfirm={() => void resetAll()} />
+      {categoriesOpen && <CategoriesSheet client={ws.client} data={data} onClose={() => setCategoriesOpen(false)} />}
     </>
   );
 }
@@ -213,8 +260,8 @@ function Field({ label, name, error, hint, required, placeholder, inputRef }: { 
   const id = `f-${name}`;
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium">
-        {label} {required && <span className="text-negative" aria-hidden>*</span>}
+      <label htmlFor={id} className="text-sm font-bold">
+        {label} {required && <span className="text-brand" aria-hidden>*</span>}
       </label>
       <input
         ref={inputRef}
@@ -227,7 +274,7 @@ function Field({ label, name, error, hint, required, placeholder, inputRef }: { 
         className="h-12 rounded-lg border border-line bg-surface px-3 text-base outline-none placeholder:text-subtle focus:border-accent aria-[invalid=true]:border-negative sm:text-sm"
       />
       {error ? (
-        <p id={`${id}-err`} className="text-xs text-negative">{error}</p>
+        <FieldError id={`${id}-err`}>{error}</FieldError>
       ) : (
         hint && <p id={`${id}-hint`} className="text-xs text-subtle">{hint}</p>
       )}
@@ -251,7 +298,7 @@ function ResetDialog({ open, onClose, onConfirm, onExport }: { open: boolean; on
       }
     >
       <p className="text-sm text-muted">
-        This replaces <strong className="text-ink">every client workspace stored in this browser</strong> with the built-in demonstration data. Changes you have made will be lost unless you export a backup first.
+        This replaces <strong className="text-ink">every client workspace stored in this browser</strong> with the built-in demonstration data and deletes all stored images. Changes you have made will be lost unless you export a backup first.
       </p>
     </Dialog>
   );

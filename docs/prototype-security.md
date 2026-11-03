@@ -6,9 +6,9 @@ Prototype Mode is for demonstration and local evaluation. It is **not** a secure
 |---|---|---|
 | Authentication | None. A placeholder "Prototype User" is shown. | Anyone using the browser can view and edit everything. |
 | Authorization | Roles appear in the UI only. | No permission boundary exists. Do not describe it as access control. |
-| Storage | `localStorage` in one browser profile; unencrypted. | Not shared, not synchronized, not backed up, and cleared if the user clears site data. Readable by anyone with access to the device profile. |
+| Storage | Records in `localStorage`, images in IndexedDB; one browser profile; unencrypted. | Not shared, not synchronized, not backed up, and cleared if the user clears site data. Readable by anyone with access to the device profile. |
 | Client separation | Enforced in the data-access layer. | This guards against accidental cross-client display, **not** against a user who can open developer tools. |
-| Backups | Plain JSON downloads of every workspace. | Treat them as confidential files and keep them only in BSA-approved storage. |
+| Backups | Plain JSON downloads of every workspace, with images embedded. | Treat them as confidential files and keep them only in BSA-approved storage. |
 | Hosting | GitHub Pages is public on the internet. | Only fictional demo data may be published. The build also sets `noindex`, which is not a security control. |
 | AI | Disabled. No data leaves the browser. | Enabling AI requires an approved server-side integration. |
 | Secrets | None in the client. `VITE_*` variables are public by design. | Never add keys or tokens to the frontend. |

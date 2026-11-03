@@ -7,12 +7,15 @@ import { AppShell } from '@/layout/AppShell';
 import { ClientOverviewPage } from '@/features/overview/ClientOverviewPage';
 import { LeadershipPage } from '@/features/leadership/LeadershipPage';
 import { PortfolioPage } from '@/features/portfolio/PortfolioPage';
+import { ProjectDetailPage } from '@/features/portfolio/ProjectDetailPage';
+import { ImportPage } from '@/features/import/ImportPage';
 import { WorkstreamsPage } from '@/features/workstreams/WorkstreamsPage';
 import { MeetingsPage } from '@/features/meetings/MeetingsPage';
 import { ActionsDecisionsPage } from '@/features/actions/ActionsDecisionsPage';
 import { ReportsPage } from '@/features/reports/ReportsPage';
 import { AdminPage } from '@/features/admin/AdminPage';
 import { Button } from '@/components/ui/Button';
+import { Toaster } from '@/components/ui/Toaster';
 import { usePreferences } from '@/state/preferences';
 import { useDataStore } from '@/state/store';
 import { backupFilename, downloadJson } from '@/services/backup';
@@ -40,7 +43,7 @@ function RouteError() {
   const err = useRouteError();
   return (
     <CenteredMessage title="Something went wrong" body={err instanceof Error ? err.message : 'An unexpected error occurred while displaying this page.'}>
-      <Link to="/" className="inline-flex h-11 items-center rounded-lg bg-accent px-4 text-sm font-semibold text-accent-contrast">Return to overview</Link>
+      <Link to="/" className="inline-flex h-11 items-center rounded-lg bg-brand px-4 text-sm font-bold text-brand-contrast">Return to overview</Link>
     </CenteredMessage>
   );
 }
@@ -57,6 +60,8 @@ const router = createHashRouter([
       { path: 'overview', element: <ClientOverviewPage /> },
       { path: 'leadership', element: <LeadershipPage /> },
       { path: 'portfolio', element: <PortfolioPage /> },
+      { path: 'portfolio/import', element: <ImportPage /> },
+      { path: 'portfolio/:projectId', element: <ProjectDetailPage /> },
       { path: 'workstreams', element: <WorkstreamsPage /> },
       { path: 'meetings', element: <MeetingsPage /> },
       { path: 'actions', element: <ActionsDecisionsPage /> },
@@ -104,7 +109,12 @@ export default function App() {
       </div>
     );
   }
-  return <RouterProvider router={router} />;
+  return (
+    <>
+      <RouterProvider router={router} />
+      <Toaster />
+    </>
+  );
 }
 
 function CenteredMessage({ title, body, children }: { title: string; body: string; children?: React.ReactNode }) {

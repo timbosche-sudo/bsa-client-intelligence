@@ -32,10 +32,10 @@ export function WorkstreamsPage() {
               <Card key={w.id} className="overflow-hidden">
                 <details className="group" open={w.order === 1}>
                   <summary className="flex min-h-11 cursor-pointer list-none items-start gap-4 p-4 sm:p-5 [&::-webkit-details-marker]:hidden">
-                    <span className="tabular flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-sm font-semibold text-accent">{w.order}</span>
+                    <span className="tabular flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-black text-accent-contrast">{w.order}</span>
                     <div className="min-w-0 flex-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="font-semibold tracking-tight">{w.title}</h2>
+                        <h2 className="font-black tracking-tight">{w.title}</h2>
                         <WorkstreamStatusBadge status={w.status} />
                         <ConfidentialityBadge level={w.confidentiality} />
                       </div>

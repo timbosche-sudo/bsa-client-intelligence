@@ -12,6 +12,7 @@ import {
   type Client,
   type Dataset,
   type ID,
+  type MediaRecord,
   type MeetingTemplate,
   type Person,
   type Project,
@@ -24,6 +25,8 @@ export interface ClientWorkspace extends ScopedSlice {
   /** People referenced by this workspace (team members and record owners). */
   people: Person[];
   meetingTemplates: MeetingTemplate[];
+  /** Media for this client's projects and for people referenced by this workspace. */
+  media: MediaRecord[];
 }
 
 export class WorkspaceNotFoundError extends Error {}
@@ -59,12 +62,25 @@ export function getWorkspace(data: Dataset, clientId: ID): ClientWorkspace {
     d.disciplineLeads.forEach((l) => add(l.personId));
   });
 
+  const people = data.people.filter((p) => referenced.has(p.id) || p.homeClientId === clientId);
+  const peopleIds = new Set(people.map((p) => p.id));
   return {
     client,
     ...slice,
-    people: data.people.filter((p) => referenced.has(p.id)),
+    people,
     meetingTemplates: data.meetingTemplates.filter((t) => t.clientId === null || t.clientId === clientId),
+    media: (data.media ?? []).filter((m) => (m.ownerType === 'project' ? m.clientId === clientId : peopleIds.has(m.ownerId))),
   };
+}
+
+/**
+ * People that may be added to a client's workspace: BSA personnel, independent external people,
+ * and this client's own contacts. Other clients' contacts are excluded.
+ */
+export function assignablePeople(data: Dataset, clientId: ID): Person[] {
+  return data.people
+    .filter((p) => !p.archivedAt && (p.homeClientId === null || p.homeClientId === clientId))
+    .sort((a, b) => a.fullName.localeCompare(b.fullName));
 }
 
 /* ───────────── Derived views (deterministic, no invented values) ───────────── */
@@ -166,7 +182,7 @@ export function searchWorkspace(ws: ClientWorkspace, query: string, limit = 20):
 
   active(ws.projects).forEach((p) => {
     if (hit(p.name, p.projectNumber, p.location, p.projectType))
-      results.push({ kind: 'project', id: p.id, title: p.name, subtitle: [p.projectNumber, categoryLabel(ws, p)].filter(Boolean).join(' · '), path: `${base}/portfolio` });
+      results.push({ kind: 'project', id: p.id, title: p.name, subtitle: [p.projectNumber, categoryLabel(ws, p)].filter(Boolean).join(' · '), path: `${base}/portfolio/${p.id}` });
   });
   ws.people.forEach((p) => {
     if (hit(p.fullName, p.title, p.studio))

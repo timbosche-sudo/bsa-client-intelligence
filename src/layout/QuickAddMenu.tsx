@@ -4,8 +4,6 @@ import { StageTag } from '@/components/ui/StageNotice';
 import { usePopover } from '@/lib/usePopover';
 
 const PENDING = [
-  { label: 'Project', icon: FolderPlus, stage: 2 },
-  { label: 'Person', icon: UserPlus, stage: 2 },
   { label: 'Action', icon: ClipboardPlus, stage: 3 },
   { label: 'Decision', icon: Gavel, stage: 3 },
   { label: 'Meeting', icon: CalendarPlus, stage: 4 },
@@ -23,7 +21,7 @@ export function QuickAddMenu({ clientId }: { clientId: string }) {
         aria-haspopup="menu"
         aria-expanded={open}
         aria-label="Quick add"
-        className="inline-flex size-11 items-center justify-center gap-2 rounded-lg bg-accent font-semibold text-accent-contrast hover:bg-accent-strong md:w-auto md:px-4 md:text-sm"
+        className="inline-flex size-11 items-center justify-center gap-2 rounded-lg bg-brand font-bold text-brand-contrast hover:bg-brand-strong md:w-auto md:px-4 md:text-sm"
       >
         <Plus size={18} aria-hidden />
         <span className="hidden md:inline">New</span>
@@ -42,6 +40,23 @@ export function QuickAddMenu({ clientId }: { clientId: string }) {
           >
             <Building2 size={16} className="text-accent" aria-hidden /> Client workspace
           </button>
+          {[
+            { label: 'Project', icon: FolderPlus, to: `/c/${clientId}/portfolio?new=1` },
+            { label: 'Person', icon: UserPlus, to: `/c/${clientId}/leadership?newPerson=1` },
+          ].map(({ label, icon: Icon, to }) => (
+            <button
+              key={label}
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                setOpen(false);
+                navigate(to);
+              }}
+              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-2.5 text-left text-sm hover:bg-surface-3"
+            >
+              <Icon size={16} className="text-accent" aria-hidden /> {label}
+            </button>
+          ))}
           {PENDING.map(({ label, icon: Icon, stage }) => (
             <button
               key={label}

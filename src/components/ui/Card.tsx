@@ -28,7 +28,7 @@ export function Panel({ title, eyebrow, icon, to, linkLabel = 'View all', action
         {icon && <span className="text-accent">{icon}</span>}
         <div className="min-w-0 flex-1">
           {eyebrow && <p className="eyebrow">{eyebrow}</p>}
-          <h2 className="truncate text-[15px] font-semibold tracking-tight">{title}</h2>
+          <h2 className="truncate text-[15px] font-bold tracking-tight">{title}</h2>
         </div>
         {actions}
         {to && (

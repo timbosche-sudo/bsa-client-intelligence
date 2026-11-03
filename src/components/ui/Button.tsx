@@ -12,10 +12,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variants: Record<Variant, string> = {
-  primary: 'bg-accent text-accent-contrast hover:bg-accent-strong font-semibold',
+  primary: 'bg-brand text-brand-contrast hover:bg-brand-strong font-bold',
   secondary: 'bg-surface-2 text-ink border border-line hover:border-line-strong hover:bg-surface-3',
   ghost: 'text-muted hover:text-ink hover:bg-surface-3',
-  danger: 'bg-negative-soft text-negative border border-negative/30 hover:bg-negative/20',
+  danger: 'bg-transparent text-ink border border-brand hover:bg-negative-soft font-bold',
 };
 
 // Every size keeps a ≥44px touch target on coarse pointers.

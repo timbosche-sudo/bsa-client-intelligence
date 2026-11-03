@@ -23,8 +23,8 @@ bsa-client-intelligence-backup-*.json
 *.xls
 *.xlsm
 *.csv
-uploads/
-media/
+/uploads/
+/media/
 
 # Editor / OS
 .DS_Store
@@ -33,3 +33,6 @@ Thumbs.db
 !.vscode/extensions.json
 .idea/
 *.log
+
+# Local-only tests that read real data files
+*.local.test.ts

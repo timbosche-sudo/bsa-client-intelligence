@@ -1,19 +1,18 @@
 import { cn } from '@/lib/cn';
+import { Logo, hasOfficialLogo } from './Logo';
 
 /**
- * TEMPORARY typographic placeholder — NOT the official BSA LifeStructures logo.
- * Replace this component's contents with the approved logo asset when brand files are supplied.
+ * Application identity: official BSA logo (when supplied) + product name, separated by clear space.
+ * Without the official file, a plain-text product name is shown. It deliberately does NOT imitate the logo.
  */
 export function Wordmark({ compact, className }: { compact?: boolean; className?: string }) {
   return (
-    <div className={cn('flex items-center gap-2.5 select-none', className)} title="Temporary wordmark — official BSA logo pending">
-      <span className="flex h-8 min-w-8 items-center justify-center rounded-md border border-line-strong px-1.5 text-[13px] font-bold tracking-[0.08em] text-ink">
-        BSA
-      </span>
-      {!compact && (
+    <div className={cn('flex items-center select-none', className)}>
+      {hasOfficialLogo && <Logo height={compact ? 18 : 22} className={compact ? '' : 'mr-3 border-r border-line pr-3'} />}
+      {(!compact || !hasOfficialLogo) && (
         <span className="leading-tight">
-          <span className="block text-[13px] font-semibold tracking-tight text-ink">Client Intelligence</span>
-          <span className="block text-[10px] uppercase tracking-[0.16em] text-subtle">BSA LifeStructures</span>
+          {!hasOfficialLogo && <span className={cn('block font-black tracking-tight text-ink', compact ? 'text-xs' : 'text-[15px]')}>BSA</span>}
+          {!compact && <span className="block text-[11px] uppercase tracking-[0.14em] text-muted">Client Intelligence</span>}
         </span>
       )}
     </div>

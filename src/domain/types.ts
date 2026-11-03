@@ -102,6 +102,11 @@ export interface Person extends BaseRecord {
   active: boolean;
   /** Contacts are not assumed to be application users. */
   isAppUser: boolean;
+  /**
+   * For client contacts: the client workspace the person belongs to. They are never offered in other
+   * clients' pickers. BSA personnel and independent external people have null (reusable everywhere).
+   */
+  homeClientId: ID | null;
 }
 
 export type RaciRole = 'accountable' | 'responsible' | 'consulted' | 'informed';
@@ -146,7 +151,17 @@ export interface ReadinessAssessment {
   status: ReadinessStatus;
   note: string;
   assessedById: ID | null;
+  /** Display name of who recorded the assessment (prototype has no user→person link yet). */
+  assessedByName?: string | null;
   assessedAt: ISODateTime | null;
+}
+
+export interface DocumentLink {
+  id: ID;
+  title: string;
+  /** Link to the document in its system of record (e.g. SharePoint/Teams). Files are not stored in the app. */
+  url: string;
+  addedAt: ISODateTime;
 }
 
 export interface FeeMix {
@@ -230,6 +245,7 @@ export interface Project extends BaseRecord, ClientScoped {
   /** Overall assessment is an explicit human judgment, never computed. */
   overallReadiness: ReadinessAssessment;
 
+  documentLinks: DocumentLink[];
   provenance: Provenance | null;
   history: ProjectHistoryEntry[];
 }
@@ -402,6 +418,37 @@ export interface ActivityEntry {
   summary: string;
 }
 
+/* ───────────────────────── Media ───────────────────────── */
+
+export type MediaKind = 'headshot' | 'rendering' | 'construction' | 'plan' | 'photo' | 'other';
+
+export const MEDIA_KIND_LABELS: Record<MediaKind, string> = {
+  headshot: 'Headshot',
+  rendering: 'Rendering',
+  construction: 'Construction photography',
+  plan: 'Plan / diagram',
+  photo: 'Photograph',
+  other: 'Other',
+};
+
+/**
+ * Metadata for an uploaded image. The binary lives in the MediaStore (IndexedDB in Prototype Mode),
+ * keyed by the same id. Headshots belong to a person (global, clientId null); project images to a client.
+ */
+export interface MediaRecord extends BaseRecord {
+  clientId: ID | null;
+  ownerType: 'person' | 'project';
+  ownerId: ID;
+  kind: MediaKind;
+  caption: string;
+  credit: string;
+  fileName: string;
+  mime: string;
+  width: number;
+  height: number;
+  bytes: number;
+}
+
 /* ───────────────────────── Dataset ───────────────────────── */
 
 /** The complete persisted dataset. Versioned for migrations. */
@@ -424,6 +471,7 @@ export interface Dataset {
   meetingTemplates: MeetingTemplate[];
   meetings: Meeting[];
   reports: ReportRecord[];
+  media: MediaRecord[];
   activity: ActivityEntry[];
 }
 

@@ -89,7 +89,7 @@ const people: Person[] = [
     ...base(CRAIG),
     fullName: 'Craig Puccetti',
     title: 'Principal',
-    organization: 'BSA LifeStructures',
+    organization: 'BSA',
     affiliation: 'bsa',
     studio: 'Austin',
     email: null,
@@ -99,6 +99,7 @@ const people: Person[] = [
     headshotMediaId: null,
     active: true,
     isAppUser: false,
+    homeClientId: null,
   },
 ];
 
@@ -166,7 +167,7 @@ function sampleProject(p: {
     name: p.name,
     description: p.description,
     location: p.location,
-    studio: 'Sample Studio',
+    studio: 'Sample',
     categoryId: p.category,
     projectType: p.type,
     size: { value: null, unit: 'sf', note: '' },
@@ -197,6 +198,7 @@ function sampleProject(p: {
     },
     readiness: { ...readinessAll(), ...(p.readiness as Record<string, ReadinessAssessment>) },
     overallReadiness: p.overall ?? notAssessed(),
+    documentLinks: [],
     provenance: null,
     history: [{ at: SEEDED_AT, by: 'System', summary: 'Fictional demonstration record created.' }],
   };
@@ -563,6 +565,7 @@ export function createDemoSeed(): Dataset {
     meetingTemplates,
     meetings,
     reports: [],
+    media: [],
     activity: [],
   } satisfies Dataset);
 }

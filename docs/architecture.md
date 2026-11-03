@@ -22,12 +22,14 @@ src/
 │   ├── persistence/     StorageAdapter interface + LocalStorageAdapter
 │   └── seed/            Fictional demonstration seed (public build)
 ├── state/           Zustand stores: dataset + autosave, UI preferences, useWorkspace()
-├── services/        Backup/export (import, reporting, media and AI join here in later stages)
+├── data/media/      MediaStore interface + IndexedDB implementation, useMediaUrl()
+├── data/mutations.ts  Pure dataset mutations with integrity guards (no deleting referenced records)
+├── services/        Backup/export with embedded images, image validation/crop/compression
 ├── auth/            AuthProvider interface + prototype placeholder (Entra ID later)
 ├── config/          Non-secret runtime environment
 ├── components/      Reusable UI primitives and status badges
 ├── layout/          App shell: sidebar, top bar, client selector, search, quick add
-├── features/        One folder per module (overview, leadership, portfolio, …)
+├── features/        One folder per module (overview, leadership, portfolio, import, admin, …)
 └── brand/           Temporary wordmark (replace with official BSA assets)
 ```
 
@@ -35,6 +37,19 @@ src/
 
 `HashRouter`, with URLs of the form `#/c/:clientId/:module`. Hash routing avoids 404s on GitHub Pages deep links,
 and the client ID in the URL makes the active workspace explicit and bookmarkable.
+
+## Media
+
+Image binaries are kept out of the JSON dataset. `MediaRecord` metadata (owner, kind, caption, credit, size) lives in
+`dataset.media`; the bytes live in the `MediaStore` (IndexedDB in Prototype Mode, Azure Blob Storage later) under the same ID.
+Uploads are validated (JPEG/PNG/WebP, ≤15 MB), then resized (headshots 600×600 square crop; project images ≤2400 px on the long edge)
+and compressed to WebP (JPEG fallback). Backups embed the bytes as base64.
+
+## Integrity rules
+
+`data/mutations.ts` blocks deleting people or projects that other records reference; the UI explains why and offers archiving instead.
+Leadership tiers and portfolio categories can't be removed while in use, and built-in categories can only be renamed.
+Project edits append a readable entry to `project.history`.
 
 ## Persistence and save status
 
@@ -50,7 +65,7 @@ the user is offered a download of it first.
 
 | Stage | Adds |
 |---|---|
-| 2 | IndexedDB media store (headshots, project images) behind a `MediaStore` interface; JSON/Excel/CSV import pipeline with field mapping, preview and duplicate detection |
+| 2 ✅ | IndexedDB media store behind `MediaStore`; people/leadership/project editing; JSON/Excel/CSV import pipeline (`features/import`: parsers → candidates → preview → approved commit) |
 | 3 | Record editors, cross-links, accountability views, restart-checklist templates |
 | 4 | Meeting Mode, autosaved meeting drafts, finalization and amendments |
 | 5 | Report builders on `ClientWorkspace`, client-side PDF, confidentiality filtering, `AiProvider` interface (disabled by default) |

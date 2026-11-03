@@ -1,9 +1,8 @@
 import { Download, Moon, Sun, UserRound } from 'lucide-react';
 import { prototypeAuth } from '@/auth/session';
-import { buildBackup, backupFilename, downloadJson } from '@/services/backup';
+import { exportFullBackup } from '@/services/exportBackup';
 import { usePopover } from '@/lib/usePopover';
 import { usePreferences } from '@/state/preferences';
-import { useDataStore } from '@/state/store';
 import { PrototypeBadge } from './PrototypeBadge';
 
 export function ProfileMenu() {
@@ -11,13 +10,9 @@ export function ProfileMenu() {
   const user = prototypeAuth.getCurrentUser();
   const theme = usePreferences((s) => s.theme);
   const setTheme = usePreferences((s) => s.setTheme);
-  const data = useDataStore((s) => s.data);
-
   const exportBackup = async () => {
-    if (!data) return;
-    await useDataStore.getState().flush();
-    downloadJson(backupFilename(), buildBackup(useDataStore.getState().data ?? data));
     setOpen(false);
+    await exportFullBackup();
   };
 
   return (

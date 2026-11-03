@@ -9,7 +9,7 @@ import { useDataStore } from '@/state/store';
 
 export function Monogram({ client, size = 'md', className }: { client: Pick<Client, 'monogram'>; size?: 'sm' | 'md'; className?: string }) {
   return (
-    <span className={cn(className, 'inline-flex shrink-0 items-center justify-center rounded-md bg-accent-soft font-semibold text-accent', size === 'sm' ? 'size-7 text-[10px]' : 'size-8 text-[11px]')}>
+    <span className={cn(className, 'inline-flex shrink-0 items-center justify-center rounded-full bg-surface-3 font-bold text-ink ring-1 ring-line-strong', size === 'sm' ? 'size-7 text-[10px]' : 'size-8 text-[11px]')}>
       {client.monogram}
     </span>
   );

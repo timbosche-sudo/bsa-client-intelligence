@@ -1,6 +1,6 @@
 # BSA Client Intelligence
 
-Strategic client leadership and portfolio management platform for **BSA LifeStructures** Client Teams.
+Strategic client leadership and portfolio management platform for **BSA** Client Teams.
 
 > **Prototype Mode.** Data is stored in your browser only, with no sign-in or access control.
 > The public demo contains **fictional sample projects**. See [docs/prototype-security.md](docs/prototype-security.md).
@@ -10,8 +10,8 @@ Strategic client leadership and portfolio management platform for **BSA LifeStru
 | Stage | Scope | Status |
 |---|---|---|
 | 1 | Platform foundation, design system, shell, Client Overview, domain model, local persistence | ✅ Complete |
-| 2 | Leadership & people, portfolio cards/table/detail, images, JSON + Excel/CSV import | Next |
-| 3 | Workstreams, initiatives, actions, decisions, risks, readiness, restart checklists | |
+| 2 | Leadership & people, headshots, portfolio cards/table/detail, images, JSON + Excel/CSV import, BSA brand standards | ✅ Complete |
+| 3 | Workstreams, initiatives, actions, decisions, risks, readiness, restart checklists | Next |
 | 4 | Guided Meeting Mode | |
 | 5 | Reporting (PDF) and AI interface | |
 | 6 | Administration, backup/restore, QA, PWA, deployment hardening | |
@@ -41,9 +41,18 @@ GitHub Pages sites are **public**. Only publish the fictional demo dataset.
 ## Data backup
 
 - **Export:** profile menu → *Export backup (JSON)*, or *Administration → Data & backup*. The file contains every workspace stored in that browser.
+- **Images:** headshots and project images are stored in this browser's IndexedDB and **embedded (base64) in backups**, so a backup file is self-contained. Browser storage quotas apply; *Administration* shows usage.
 - **Restore:** arrives in Stage 6 (with preview and confirmation).
-- **Reset:** *Administration → Reset to demo data* replaces all local data. Export first.
-- Media (Stage 2+) is stored in IndexedDB and will be embedded in backups. Browser storage quotas apply.
+- **Reset:** *Administration → Reset to demo data* replaces all local data and deletes stored images. Export first.
+
+## Importing projects
+
+*Portfolio Readiness → Import* accepts:
+
+- **Portfolio seed JSON**: the `client` / `source` / `projects` structure (mapping in [docs/seed-data-mapping.md](docs/seed-data-mapping.md)).
+- **Excel (.xlsx) or CSV**: any column layout. Columns are auto-matched by name and can be remapped manually.
+
+Every import shows a preview first: new projects, existing matches (by client + project number), the fields that would change, conflicts, missing values, warnings and validation errors. You choose **Add / Update / Skip** for each row and must explicitly approve. Blank source values never erase existing data. Each imported project records its source file, worksheet, row and date.
 
 ## Real client data
 
@@ -57,7 +66,11 @@ See [docs/architecture.md](docs/architecture.md). The UI talks to a `StorageAdap
 BSA-approved Azure services (Entra ID, an API, a managed database, Blob Storage) means adding a remote adapter and an
 auth provider, without rewriting the UI.
 
-## Brand assets
+## Brand standards
 
-The wordmark (`src/brand/Wordmark.tsx`), app icons (`public/icon*`) and color tokens (`src/styles/index.css`) are
-**temporary placeholders** based on the written brand direction. Replace them with official BSA Intelligence Design System assets when they're supplied.
+The UI follows the **BSA Brand Style Guide 2026** (Lato, the BSA palette, black/white backgrounds, perfect circles,
+1pt divisions); see [docs/brand-standards.md](docs/brand-standards.md).
+
+**Official logo:** the logo is never recreated. Download the white and red logo files from **Open Asset** and save
+them as `src/brand/assets/bsa-logo-white.svg` and `bsa-logo-red.svg`; the app uses them automatically.
+The app icons in `public/icon*` are still neutral placeholders.
