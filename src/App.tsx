@@ -9,6 +9,7 @@ import { LeadershipPage } from '@/features/leadership/LeadershipPage';
 import { PortfolioPage } from '@/features/portfolio/PortfolioPage';
 import { ProjectDetailPage } from '@/features/portfolio/ProjectDetailPage';
 import { ImportPage } from '@/features/import/ImportPage';
+import { InitiativeDetailPage } from '@/features/strategy/InitiativeDetailPage';
 import { WorkstreamsPage } from '@/features/workstreams/WorkstreamsPage';
 import { MeetingsPage } from '@/features/meetings/MeetingsPage';
 import { ActionsDecisionsPage } from '@/features/actions/ActionsDecisionsPage';
@@ -63,6 +64,7 @@ const router = createHashRouter([
       { path: 'portfolio/import', element: <ImportPage /> },
       { path: 'portfolio/:projectId', element: <ProjectDetailPage /> },
       { path: 'workstreams', element: <WorkstreamsPage /> },
+      { path: 'initiatives/:initiativeId', element: <InitiativeDetailPage /> },
       { path: 'meetings', element: <MeetingsPage /> },
       { path: 'actions', element: <ActionsDecisionsPage /> },
       { path: 'reports', element: <ReportsPage /> },

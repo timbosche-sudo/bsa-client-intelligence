@@ -12,6 +12,7 @@ import {
   type Client,
   type Dataset,
   type ID,
+  type ChecklistTemplate,
   type MediaRecord,
   type MeetingTemplate,
   type Person,
@@ -25,6 +26,7 @@ export interface ClientWorkspace extends ScopedSlice {
   /** People referenced by this workspace (team members and record owners). */
   people: Person[];
   meetingTemplates: MeetingTemplate[];
+  checklistTemplates: ChecklistTemplate[];
   /** Media for this client's projects and for people referenced by this workspace. */
   media: MediaRecord[];
 }
@@ -51,9 +53,11 @@ export function getWorkspace(data: Dataset, clientId: ID): ClientWorkspace {
   add(client.executiveSponsorId);
   slice.memberships.forEach((m) => add(m.personId));
   slice.workstreams.forEach((w) => add(w.championId));
-  slice.initiatives.forEach((i) => (add(i.championId), i.participantIds.forEach(add)));
-  slice.actions.forEach((a) => (add(a.ownerId), a.participantIds.forEach(add)));
-  slice.decisions.forEach((d) => (add(d.ownerId), d.participantIds.forEach(add)));
+  const raci = (r: { consultedIds?: ID[]; informedIds?: ID[] }) => (r.consultedIds?.forEach(add), r.informedIds?.forEach(add));
+  slice.initiatives.forEach((i) => (add(i.championId), i.participantIds.forEach(add), raci(i)));
+  slice.actions.forEach((a) => (add(a.ownerId), a.participantIds.forEach(add), raci(a)));
+  slice.decisions.forEach((d) => (add(d.ownerId), d.participantIds.forEach(add), raci(d), add(d.approval?.approvedById)));
+  slice.checklists.forEach((c) => c.items.forEach((i) => add(i.ownerId)));
   slice.risks.forEach((r) => add(r.ownerId));
   slice.meetings.forEach((m) => (add(m.facilitatorId), m.attendeeIds.forEach(add)));
   slice.projects.forEach((p) => {
@@ -69,6 +73,7 @@ export function getWorkspace(data: Dataset, clientId: ID): ClientWorkspace {
     ...slice,
     people,
     meetingTemplates: data.meetingTemplates.filter((t) => t.clientId === null || t.clientId === clientId),
+    checklistTemplates: (data.checklistTemplates ?? []).filter((t) => t.clientId === null || t.clientId === clientId),
     media: (data.media ?? []).filter((m) => (m.ownerType === 'project' ? m.clientId === clientId : peopleIds.has(m.ownerId))),
   };
 }
@@ -163,7 +168,7 @@ export function categoryLabel(ws: ClientWorkspace, project: Project): string {
 
 /* ───────────── Search ───────────── */
 
-export type SearchKind = 'project' | 'person' | 'workstream' | 'initiative' | 'action' | 'decision';
+export type SearchKind = 'project' | 'person' | 'workstream' | 'initiative' | 'action' | 'decision' | 'risk';
 
 export interface SearchResult {
   kind: SearchKind;
@@ -193,13 +198,16 @@ export function searchWorkspace(ws: ClientWorkspace, query: string, limit = 20):
       results.push({ kind: 'workstream', id: w.id, title: w.title, subtitle: `Workstream ${w.order}`, path: `${base}/workstreams` });
   });
   active(ws.initiatives).forEach((i) => {
-    if (hit(i.title, i.description)) results.push({ kind: 'initiative', id: i.id, title: i.title, subtitle: 'Initiative', path: `${base}/workstreams` });
+    if (hit(i.title, i.description)) results.push({ kind: 'initiative', id: i.id, title: i.title, subtitle: 'Initiative', path: `${base}/initiatives/${i.id}` });
   });
   active(ws.actions).forEach((a) => {
     if (hit(a.title, a.description)) results.push({ kind: 'action', id: a.id, title: a.title, subtitle: 'Action', path: `${base}/actions` });
   });
+  active(ws.risks).forEach((r) => {
+    if (hit(r.title, r.description)) results.push({ kind: 'risk', id: r.id, title: r.title, subtitle: r.kind === 'opportunity' ? 'Opportunity' : r.kind === 'issue' ? 'Issue' : 'Risk', path: `${base}/actions?tab=risks` });
+  });
   active(ws.decisions).forEach((d) => {
-    if (hit(d.title, d.description)) results.push({ kind: 'decision', id: d.id, title: d.title, subtitle: 'Decision', path: `${base}/actions` });
+    if (hit(d.title, d.description)) results.push({ kind: 'decision', id: d.id, title: d.title, subtitle: 'Decision', path: `${base}/actions?tab=decisions` });
   });
   return results.slice(0, limit);
 }

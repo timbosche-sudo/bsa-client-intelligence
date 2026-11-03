@@ -11,8 +11,8 @@ Strategic client leadership and portfolio management platform for **BSA** Client
 |---|---|---|
 | 1 | Platform foundation, design system, shell, Client Overview, domain model, local persistence | ✅ Complete |
 | 2 | Leadership & people, headshots, portfolio cards/table/detail, images, JSON + Excel/CSV import, BSA brand standards | ✅ Complete |
-| 3 | Workstreams, initiatives, actions, decisions, risks, readiness, restart checklists | Next |
-| 4 | Guided Meeting Mode | |
+| 3 | Workstreams, initiatives, actions, decisions, risks, restart checklists, accountability views | ✅ Complete |
+| 4 | Guided Meeting Mode | Next |
 | 5 | Reporting (PDF) and AI interface | |
 | 6 | Administration, backup/restore, QA, PWA, deployment hardening | |
 
@@ -44,6 +44,15 @@ GitHub Pages sites are **public**. Only publish the fictional demo dataset.
 - **Images:** headshots and project images are stored in this browser's IndexedDB and **embedded (base64) in backups**, so a backup file is self-contained. Browser storage quotas apply; *Administration* shows usage.
 - **Restore:** arrives in Stage 6 (with preview and confirmation).
 - **Reset:** *Administration → Reset to demo data* replaces all local data and deletes stored images. Export first.
+
+## Strategy & accountability (Stage 3)
+
+- **Workstreams**: edit, reorder, archive, or add new ones. Each has a champion, topics, deliverable and confidentiality.
+- **Initiatives** each have a detail page with a champion, a lightweight RACI, related projects, and linked actions, decisions, risks and milestones.
+- **Actions**: filter by owner, workstream, project, priority or overdue, and change status inline. Completing an action records the date and notes.
+- **Decisions** are separate from actions. *Approved* requires a recorded approver and date, and *Superseded* requires the replacing decision. Approved decisions can be archived but never deleted.
+- **Accountability**: commitments by person and by workstream, and an individual view of everything a person is accountable for, supports or is consulted on.
+- **Restart checklists**: apply a template (such as the 8-consideration hospital restart template) to a project only after recording who confirmed its identity and scope. Includes program comparison, change log and leadership summary tools. Templates are managed in *Administration*.
 
 ## Importing projects
 

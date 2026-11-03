@@ -10,6 +10,7 @@ import { nowIso } from '@/domain/ids';
 import { formatDateTime } from '@/lib/format';
 import { currentUserName, run } from '@/state/actions';
 import { DI, DL, Section } from './shared';
+import { ChecklistSection } from './ChecklistSection';
 
 const OPTIONS = (Object.keys(READINESS_LABELS) as ReadinessStatus[]).map((s) => ({ value: s, label: READINESS_LABELS[s] }));
 const blank = (): ReadinessAssessment => ({ status: 'not_assessed', note: '', assessedById: null, assessedAt: null });
@@ -115,6 +116,8 @@ export function ReadinessTab({ ws, project: p }: { ws: ClientWorkspace; project:
           )}
         </div>
       </Section>
+
+      <ChecklistSection ws={ws} project={p} />
     </div>
   );
 }

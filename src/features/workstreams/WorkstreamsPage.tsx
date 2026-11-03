@@ -1,96 +1,225 @@
-import { ChevronDown, FileCheck2, Target } from 'lucide-react';
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, ClipboardPlus, FileCheck2, Gavel, Pencil, Plus, ShieldPlus, Target } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { StageNotice } from '@/components/ui/StageNotice';
+import { PersonAvatar } from '@/components/PersonAvatar';
 import { ConfidentialityBadge, InitiativeStatusBadge, WorkstreamStatusBadge } from '@/components/status';
-import { active, openActions, personName } from '@/data/repository';
+import { active, isOverdue, openActions, pendingDecisions, type ClientWorkspace } from '@/data/repository';
+import { reorderWorkstreams } from '@/data/strategyMutations';
+import type { Workstream } from '@/domain/types';
+import { cn } from '@/lib/cn';
+import { formatDate } from '@/lib/format';
+import { run } from '@/state/actions';
 import { useRequiredWorkspace } from '@/state/useWorkspace';
+import { ActionList, DecisionList, RiskList } from '@/features/strategy/RecordRows';
+import { useRecordSheet, type SheetRequest } from '@/features/strategy/useRecordSheet';
 
 export function WorkstreamsPage() {
   const ws = useRequiredWorkspace();
-  const streams = active(ws.workstreams).sort((a, b) => a.order - b.order);
-  const actions = openActions(ws);
+  const { open, sheet } = useRecordSheet(ws);
+  const [showArchived, setShowArchived] = useState(false);
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set(active(ws.workstreams).sort((a, b) => a.order - b.order).slice(0, 1).map((w) => w.id)));
+  const streams = ws.workstreams.filter((w) => showArchived || !w.archivedAt).sort((a, b) => a.order - b.order);
+  const activeIds = streams.filter((w) => !w.archivedAt).map((w) => w.id);
+
+  const move = (id: string, delta: number) => {
+    const i = activeIds.indexOf(id);
+    const next = [...activeIds];
+    next.splice(i, 1);
+    next.splice(i + delta, 0, id);
+    run((d) => reorderWorkstreams(d, ws.client.id, next), { clientId: ws.client.id, entity: 'workstream', entityId: id, summary: 'Reordered workstreams' }, false);
+  };
+  const toggle = (id: string) =>
+    setExpanded((s) => {
+      const n = new Set(s);
+      if (n.has(id)) n.delete(id);
+      else n.add(id);
+      return n;
+    });
 
   return (
     <>
-      <PageHeader eyebrow={ws.client.name} title="Strategic Workstreams" description="Delivery preparedness and proactive client value, organized into accountable workstreams." />
-      <StageNotice stage={3} className="mb-6">
-        Editing, reordering, archiving workstreams; managing initiatives, champions, risks and project restart checklists.
-      </StageNotice>
+      <PageHeader
+        eyebrow={ws.client.name}
+        title="Strategic Workstreams"
+        description="Delivery preparedness and proactive client value, organized into accountable workstreams and initiatives."
+        actions={
+          <>
+            <label className="flex h-11 items-center gap-2 rounded-lg border border-line px-3 text-sm text-muted">
+              <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} className="size-4 accent-[var(--accent)]" />
+              Show archived
+            </label>
+            <Button icon={<Target size={16} />} onClick={() => open({ kind: 'initiative', id: null })}>New initiative</Button>
+            <Button variant="primary" icon={<Plus size={16} />} onClick={() => open({ kind: 'workstream', id: null })}>New workstream</Button>
+          </>
+        }
+      />
 
       {streams.length === 0 ? (
         <Card>
-          <EmptyState title="No workstreams defined for this client" />
+          <EmptyState title="No workstreams yet" action={<Button variant="primary" size="sm" onClick={() => open({ kind: 'workstream', id: null })}>Create a workstream</Button>}>
+            Workstreams organize initiatives, actions, decisions and risks.
+          </EmptyState>
         </Card>
       ) : (
-        <div className="flex flex-col gap-4">
-          {streams.map((w) => {
-            const initiatives = active(ws.initiatives).filter((i) => i.workstreamId === w.id);
-            const wsActions = actions.filter((a) => a.workstreamId === w.id);
-            return (
-              <Card key={w.id} className="overflow-hidden">
-                <details className="group" open={w.order === 1}>
-                  <summary className="flex min-h-11 cursor-pointer list-none items-start gap-4 p-4 sm:p-5 [&::-webkit-details-marker]:hidden">
-                    <span className="tabular flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-black text-accent-contrast">{w.order}</span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="font-black tracking-tight">{w.title}</h2>
-                        <WorkstreamStatusBadge status={w.status} />
-                        <ConfidentialityBadge level={w.confidentiality} />
-                      </div>
-                      <p className="mt-1 text-sm text-muted">{w.purpose}</p>
-                      <p className="mt-2 text-xs text-subtle">
-                        Champion: {personName(ws, w.championId) ?? 'Unassigned'} · {initiatives.length} initiative{initiatives.length === 1 ? '' : 's'} · {wsActions.length} open action{wsActions.length === 1 ? '' : 's'}
-                      </p>
-                    </div>
-                    <ChevronDown size={18} className="mt-2 shrink-0 text-subtle transition-transform group-open:rotate-180" aria-hidden />
-                  </summary>
-                  <div className="grid gap-6 border-t border-line p-4 sm:p-5 md:grid-cols-2">
-                    <div>
-                      <p className="eyebrow mb-3">Topics</p>
-                      <ul className="flex flex-col gap-2">
-                        {w.topics.map((t, i) => (
-                          <li key={i} className="flex gap-2.5 text-sm">
-                            <span className="mt-2 size-1 shrink-0 rounded-full bg-subtle" aria-hidden />
-                            {t}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="flex flex-col gap-5">
-                      <div>
-                        <p className="eyebrow mb-2">Deliverable</p>
-                        <p className="flex items-start gap-2 text-sm"><FileCheck2 size={16} className="mt-0.5 shrink-0 text-accent" aria-hidden />{w.deliverable}</p>
-                      </div>
-                      {w.confidentialityNote && <p className="rounded-lg border border-line bg-surface-2 px-3 py-2 text-xs text-muted">{w.confidentialityNote}</p>}
-                      <div>
-                        <p className="eyebrow mb-2">Initiatives</p>
-                        {initiatives.length ? (
-                          <ul className="flex flex-col gap-2">
-                            {initiatives.map((i) => (
-                              <li key={i.id} className="flex items-start gap-3 rounded-lg border border-line bg-surface-2 p-3">
-                                <Target size={15} className="mt-0.5 shrink-0 text-subtle" aria-hidden />
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-sm font-medium">{i.title}</p>
-                                  <p className="mt-0.5 text-xs text-subtle">Champion: {personName(ws, i.championId) ?? 'Unassigned'}</p>
-                                </div>
-                                <InitiativeStatusBadge status={i.status} />
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-sm text-subtle">No initiatives yet.</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </details>
-              </Card>
-            );
-          })}
+        <ol className="flex flex-col gap-4">
+          {streams.map((w) => (
+            <li key={w.id}>
+              <WorkstreamCard
+                ws={ws}
+                w={w}
+                expanded={expanded.has(w.id)}
+                onToggle={() => toggle(w.id)}
+                onOpen={open}
+                canUp={!w.archivedAt && activeIds.indexOf(w.id) > 0}
+                canDown={!w.archivedAt && activeIds.indexOf(w.id) < activeIds.length - 1}
+                onMove={(d) => move(w.id, d)}
+              />
+            </li>
+          ))}
+        </ol>
+      )}
+
+      {/* Records not assigned to a workstream remain visible. */}
+      <Unassigned ws={ws} onOpen={open} />
+      {sheet}
+    </>
+  );
+}
+
+function WorkstreamCard({ ws, w, expanded, onToggle, onOpen, canUp, canDown, onMove }: { ws: ClientWorkspace; w: Workstream; expanded: boolean; onToggle(): void; onOpen(r: SheetRequest): void; canUp: boolean; canDown: boolean; onMove(d: number): void }) {
+  const champion = ws.people.find((p) => p.id === w.championId);
+  const initiatives = active(ws.initiatives).filter((i) => i.workstreamId === w.id);
+  const actions = openActions(ws).filter((a) => a.workstreamId === w.id);
+  const overdue = actions.filter((a) => isOverdue(a)).length;
+  const decisions = pendingDecisions(ws).filter((d) => d.workstreamId === w.id);
+  const risks = active(ws.risks).filter((r) => r.workstreamId === w.id && r.status !== 'closed');
+  const panelId = `ws-panel-${w.id}`;
+
+  return (
+    <Card className={cn('overflow-hidden', w.archivedAt && 'opacity-60')}>
+      <div className="flex items-start gap-3 p-4 sm:gap-4 sm:p-5">
+        <span className="tabular flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-sm font-black text-accent-contrast">{w.order}</span>
+        <button type="button" onClick={onToggle} aria-expanded={expanded} aria-controls={panelId} className="min-h-11 min-w-0 flex-1 text-left">
+          <span className="flex flex-wrap items-center gap-2">
+            <span className="font-black tracking-tight">{w.title}</span>
+            <WorkstreamStatusBadge status={w.status} />
+            <ConfidentialityBadge level={w.confidentiality} />
+          </span>
+          <span className="mt-1 block text-sm text-muted">{w.purpose}</span>
+          <span className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-subtle">
+            <span className="inline-flex items-center gap-1.5">
+              <PersonAvatar person={champion} size="sm" className="size-6" /> Champion: {champion?.fullName ?? 'Unassigned'}
+            </span>
+            <span>{initiatives.length} initiative{initiatives.length === 1 ? '' : 's'}</span>
+            <span>{actions.length} open action{actions.length === 1 ? '' : 's'}{overdue ? ` (${overdue} overdue)` : ''}</span>
+            <span>{decisions.length} pending decision{decisions.length === 1 ? '' : 's'}</span>
+            <span>{risks.length} open risk/issue{risks.length === 1 ? '' : 's'}</span>
+          </span>
+        </button>
+        <div className="flex shrink-0 items-center gap-0.5">
+          <Button size="sm" variant="ghost" iconOnly icon={<ArrowUp size={16} />} aria-label={`Move ${w.title} up`} disabled={!canUp} onClick={() => onMove(-1)} className="max-sm:hidden" />
+          <Button size="sm" variant="ghost" iconOnly icon={<ArrowDown size={16} />} aria-label={`Move ${w.title} down`} disabled={!canDown} onClick={() => onMove(1)} className="max-sm:hidden" />
+          <Button size="sm" variant="ghost" iconOnly icon={<Pencil size={16} />} aria-label={`Edit ${w.title}`} onClick={() => onOpen({ kind: 'workstream', id: w.id })} />
+          <Button size="sm" variant="ghost" iconOnly icon={<ChevronDown size={18} className={cn('transition-transform', expanded && 'rotate-180')} />} aria-label={expanded ? 'Collapse' : 'Expand'} onClick={onToggle} />
+        </div>
+      </div>
+
+      {expanded && (
+        <div id={panelId} className="flex flex-col gap-6 border-t border-line p-4 sm:p-5">
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div>
+              <p className="eyebrow mb-3 text-ink">Topics</p>
+              <ul className="flex flex-col gap-2">
+                {w.topics.map((t, i) => (
+                  <li key={i} className="flex gap-2.5 text-sm"><span className="mt-2 size-1 shrink-0 rounded-full bg-ink" aria-hidden />{t}</li>
+                ))}
+                {!w.topics.length && <li className="text-sm text-subtle">No topics recorded.</li>}
+              </ul>
+            </div>
+            <div className="flex flex-col gap-4">
+              <div>
+                <p className="eyebrow mb-2 text-ink">Deliverable</p>
+                <p className="flex items-start gap-2 text-sm"><FileCheck2 size={16} className="mt-0.5 shrink-0 text-accent" aria-hidden />{w.deliverable || 'Not defined'}</p>
+              </div>
+              {w.confidentialityNote && <p className="border-l-2 border-line-strong bg-surface-2 px-3 py-2 text-xs text-muted">{w.confidentialityNote}</p>}
+            </div>
+          </div>
+
+          <Block title="Initiatives" action={<Button size="sm" icon={<Target size={15} />} onClick={() => onOpen({ kind: 'initiative', id: null, defaults: { workstreamId: w.id } })}>Add initiative</Button>}>
+            {initiatives.length ? (
+              <ul className="grid gap-2 md:grid-cols-2">
+                {initiatives.map((i) => {
+                  const ch = ws.people.find((p) => p.id === i.championId);
+                  const n = openActions(ws).filter((a) => a.initiativeId === i.id).length;
+                  return (
+                    <li key={i.id}>
+                      <Link to={`/c/${ws.client.id}/initiatives/${i.id}`} className="flex min-h-16 items-center gap-3 rounded-lg border border-line bg-surface-2 p-3 hover:border-line-strong">
+                        <PersonAvatar person={ch} size="sm" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-bold">{i.title}</span>
+                          <span className="block text-xs text-subtle">{ch?.fullName ?? 'Champion unassigned'} · {n} open action{n === 1 ? '' : 's'}{i.targetDate ? ` · Target ${formatDate(i.targetDate)}` : ''}</span>
+                        </span>
+                        <InitiativeStatusBadge status={i.status} />
+                        <ChevronRight size={16} className="text-subtle" aria-hidden />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="text-sm text-subtle">No initiatives yet.</p>
+            )}
+          </Block>
+
+          <Block title="Open actions" action={<Button size="sm" icon={<ClipboardPlus size={15} />} onClick={() => onOpen({ kind: 'action', id: null, defaults: { workstreamId: w.id } })}>Add action</Button>}>
+            <div className="-mx-4 sm:-mx-5"><ActionList ws={ws} actions={actions} onOpen={(id) => onOpen({ kind: 'action', id })} empty="No open actions" /></div>
+          </Block>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Block title="Pending decisions" action={<Button size="sm" icon={<Gavel size={15} />} onClick={() => onOpen({ kind: 'decision', id: null, defaults: { workstreamId: w.id } })}>Record</Button>}>
+              <div className="-mx-4 sm:-mx-5"><DecisionList ws={ws} decisions={decisions} onOpen={(id) => onOpen({ kind: 'decision', id })} empty="No pending decisions" /></div>
+            </Block>
+            <Block title="Open risks & issues" action={<Button size="sm" icon={<ShieldPlus size={15} />} onClick={() => onOpen({ kind: 'risk', id: null, defaults: { workstreamId: w.id } })}>Add</Button>}>
+              <div className="-mx-4 sm:-mx-5"><RiskList ws={ws} risks={risks} onOpen={(id) => onOpen({ kind: 'risk', id })} empty="None recorded" /></div>
+            </Block>
+          </div>
         </div>
       )}
-    </>
+    </Card>
+  );
+}
+
+function Block({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <section className="border-t border-line-strong pt-4">
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h3 className="eyebrow text-ink">{title}</h3>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function Unassigned({ ws, onOpen }: { ws: ClientWorkspace; onOpen(r: SheetRequest): void }) {
+  const initiatives = active(ws.initiatives).filter((i) => !i.workstreamId);
+  const actions = openActions(ws).filter((a) => !a.workstreamId);
+  if (!initiatives.length && !actions.length) return null;
+  return (
+    <Card className="mt-6 p-4 sm:p-5">
+      <p className="font-black tracking-tight">Not assigned to a workstream</p>
+      {initiatives.length > 0 && (
+        <ul className="mt-3 flex flex-col gap-1 text-sm">
+          {initiatives.map((i) => (
+            <li key={i.id}><Link to={`/c/${ws.client.id}/initiatives/${i.id}`} className="inline-flex min-h-11 items-center font-bold hover:underline">{i.title}</Link></li>
+          ))}
+        </ul>
+      )}
+      {actions.length > 0 && <div className="-mx-4 mt-2 sm:-mx-5"><ActionList ws={ws} actions={actions} onOpen={(id) => onOpen({ kind: 'action', id })} /></div>}
+    </Card>
   );
 }

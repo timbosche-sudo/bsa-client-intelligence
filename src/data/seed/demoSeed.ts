@@ -10,6 +10,7 @@
  *  - Confidential internal context from the project brief is NOT included here.
  */
 import { defaultClientConfig } from '@/domain/defaults';
+import { hospitalRestartTemplate } from '@/domain/checklistTemplates';
 import type {
   ActionItem,
   BaseRecord,
@@ -407,6 +408,8 @@ const initiative = (n: number, workstreamId: string, title: string, description:
   relatedProjectIds: [],
   notes: '',
   confidentiality: 'internal',
+  consultedIds: [],
+  informedIds: [],
 });
 
 const initiatives: Initiative[] = [
@@ -433,6 +436,8 @@ const action = (n: number, title: string, workstreamId: string, initiativeId: st
   completionNotes: '',
   completedAt: null,
   confidentiality: 'internal',
+  consultedIds: [],
+  informedIds: [],
 });
 
 const actions: ActionItem[] = [
@@ -463,6 +468,8 @@ const decisions: Decision[] = [
     supersededById: null,
     meetingId: null,
     confidentiality: 'internal',
+    consultedIds: [],
+    informedIds: [],
   },
 ];
 
@@ -477,6 +484,7 @@ const risks: Risk[] = [
     ownerId: null,
     projectId: null,
     workstreamId: 'ws_hm_4',
+    initiativeId: 'init_hm_3',
     status: 'open',
     mitigation: '',
     confidentiality: 'internal',
@@ -491,6 +499,7 @@ const risks: Risk[] = [
     ownerId: null,
     projectId: null,
     workstreamId: 'ws_hm_5',
+    initiativeId: 'init_hm_4',
     status: 'open',
     mitigation: '',
     confidentiality: 'internal',
@@ -566,6 +575,8 @@ export function createDemoSeed(): Dataset {
     meetings,
     reports: [],
     media: [],
+    checklistTemplates: [hospitalRestartTemplate(HM)],
+    checklists: [],
     activity: [],
   } satisfies Dataset);
 }

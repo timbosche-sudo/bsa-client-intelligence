@@ -1,11 +1,9 @@
-import { Building2, CalendarPlus, ClipboardPlus, FolderPlus, Gavel, Plus, UserPlus } from 'lucide-react';
+import { Building2, CalendarPlus, ClipboardPlus, FolderPlus, Gavel, Plus, ShieldPlus, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { StageTag } from '@/components/ui/StageNotice';
 import { usePopover } from '@/lib/usePopover';
 
 const PENDING = [
-  { label: 'Action', icon: ClipboardPlus, stage: 3 },
-  { label: 'Decision', icon: Gavel, stage: 3 },
   { label: 'Meeting', icon: CalendarPlus, stage: 4 },
 ];
 
@@ -43,6 +41,9 @@ export function QuickAddMenu({ clientId }: { clientId: string }) {
           {[
             { label: 'Project', icon: FolderPlus, to: `/c/${clientId}/portfolio?new=1` },
             { label: 'Person', icon: UserPlus, to: `/c/${clientId}/leadership?newPerson=1` },
+            { label: 'Action', icon: ClipboardPlus, to: `/c/${clientId}/actions?new=action` },
+            { label: 'Decision', icon: Gavel, to: `/c/${clientId}/actions?tab=decisions&new=decision` },
+            { label: 'Risk or issue', icon: ShieldPlus, to: `/c/${clientId}/actions?tab=risks&new=risk` },
           ].map(({ label, icon: Icon, to }) => (
             <button
               key={label}

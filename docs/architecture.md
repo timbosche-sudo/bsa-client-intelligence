@@ -45,11 +45,19 @@ Image binaries are kept out of the JSON dataset. `MediaRecord` metadata (owner, 
 Uploads are validated (JPEG/PNG/WebP, ≤15 MB), then resized (headshots 600×600 square crop; project images ≤2400 px on the long edge)
 and compressed to WebP (JPEG fallback). Backups embed the bytes as base64.
 
+## Accountability model
+
+Owner/champion = **Accountable**; participants = **Supporting**; optional `consultedIds` / `informedIds` complete a lightweight RACI.
+`data/accountability.ts` derives every view from a `ClientWorkspace`, so another client's commitments can never appear.
+
 ## Integrity rules
 
 `data/mutations.ts` blocks deleting people or projects that other records reference; the UI explains why and offers archiving instead.
 Leadership tiers and portfolio categories can't be removed while in use, and built-in categories can only be renamed.
 Project edits append a readable entry to `project.history`.
+Decisions: *Approved* requires an approval record, *Superseded* requires a valid superseding decision, and approved, superseding or meeting-recorded decisions cannot be deleted.
+Actions recorded in a meeting cannot be deleted (cancel them instead). Workstreams and initiatives with linked records can only be archived.
+Restart checklists require an identity/scope confirmation (who + basis) and copy template items, so later template edits don't rewrite applied checklists.
 
 ## Persistence and save status
 
@@ -66,7 +74,7 @@ the user is offered a download of it first.
 | Stage | Adds |
 |---|---|
 | 2 ✅ | IndexedDB media store behind `MediaStore`; people/leadership/project editing; JSON/Excel/CSV import pipeline (`features/import`: parsers → candidates → preview → approved commit) |
-| 3 | Record editors, cross-links, accountability views, restart-checklist templates |
+| 3 ✅ | `data/strategyMutations.ts` (workstreams, initiatives, actions, decisions, risks, checklists with integrity rules), `data/accountability.ts` (person / workstream views), `features/strategy` (shared record editors via `useRecordSheet`), schema v3 |
 | 4 | Meeting Mode, autosaved meeting drafts, finalization and amendments |
 | 5 | Report builders on `ClientWorkspace`, client-side PDF, confidentiality filtering, `AiProvider` interface (disabled by default) |
 | 6 | Restore with preview, admin configuration, service worker, accessibility/performance QA |

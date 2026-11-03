@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Building2, Database, Download, History, ListOrdered, Plus, RotateCcw, ShieldAlert, Sparkles, Upload } from 'lucide-react';
+import { Building2, Database, Download, History, ListChecks, ListOrdered, Plus, RotateCcw, ShieldAlert, Sparkles, Upload } from 'lucide-react';
 import { z } from 'zod';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -22,6 +22,7 @@ import { orphanMediaIds } from '@/data/mutations';
 import { toast } from '@/state/toast';
 import { FieldError } from '@/components/form/fields';
 import { CategoriesSheet } from './CategoriesSheet';
+import { ChecklistTemplatesSheet } from './ChecklistTemplatesSheet';
 
 const clientSchema = z.object({
   name: z.string().trim().min(2, 'Enter the client name (at least 2 characters).').max(120),
@@ -45,6 +46,7 @@ export function AdminPage() {
   const [usage, setUsage] = useState<number | null>(null);
   const [media, setMedia] = useState<{ count: number; orphans: string[]; quota: number | null; used: number | null } | null>(null);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [templatesOpen, setTemplatesOpen] = useState(false);
   const clients = listClients(data, { includeArchived: true });
 
   useEffect(() => {
@@ -127,6 +129,9 @@ export function AdminPage() {
             <Button size="sm" icon={<ListOrdered size={15} aria-hidden />} onClick={() => setCategoriesOpen(true)}>
               Portfolio categories — {ws.client.name}
             </Button>
+            <Button size="sm" icon={<ListChecks size={15} aria-hidden />} onClick={() => setTemplatesOpen(true)}>
+              Readiness checklist templates
+            </Button>
             <p className="flex flex-wrap items-center gap-2 text-xs text-subtle">
               Editing client profiles, archiving and other workspace configuration <StageTag stage={6} />
             </p>
@@ -203,6 +208,7 @@ export function AdminPage() {
 
       <ResetDialog open={resetOpen} onClose={() => setResetOpen(false)} onExport={exportBackup} onConfirm={() => void resetAll()} />
       {categoriesOpen && <CategoriesSheet client={ws.client} data={data} onClose={() => setCategoriesOpen(false)} />}
+      {templatesOpen && <ChecklistTemplatesSheet client={ws.client} data={data} onClose={() => setTemplatesOpen(false)} />}
     </>
   );
 }

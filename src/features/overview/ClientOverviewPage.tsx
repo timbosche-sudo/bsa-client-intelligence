@@ -71,7 +71,7 @@ export function ClientOverviewPage() {
             />
             <Stat to={`${base}/portfolio`} label="Readiness assessed" value={`${summary.readiness.assessed} of ${summary.total}`} note={summary.readiness.notAssessed ? `${summary.readiness.notAssessed} not assessed` : 'All assessed'} />
             <Stat to={`${base}/actions`} label="Open actions" value={String(actions.length)} note={overdue.length ? `${overdue.length} overdue` : 'None overdue'} tone={overdue.length ? 'caution' : undefined} />
-            <Stat to={`${base}/actions`} label="Pending decisions" value={String(decisions.length)} note="Proposed or under review" />
+            <Stat to={`${base}/actions?tab=decisions`} label="Pending decisions" value={String(decisions.length)} note="Proposed or under review" />
           </section>
 
           <Question n={1} title="Where do we stand?" />
@@ -97,7 +97,7 @@ export function ClientOverviewPage() {
 
           <Question n={2} title="What needs our attention?" />
           <div className="mb-10 grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-            <Panel title="Critical issues" icon={<AlertOctagon size={18} />} to={`${base}/actions`}>
+            <Panel title="Critical issues" icon={<AlertOctagon size={18} />} to={`${base}/actions?tab=risks`}>
               {issues.length ? (
                 <ul className="flex flex-col divide-y divide-line">
                   {issues.map((r) => (
@@ -134,7 +134,7 @@ export function ClientOverviewPage() {
               )}
               {actions.length > 5 && <p className="mt-3 text-xs text-subtle">+ {actions.length - 5} more</p>}
             </Panel>
-            <Panel title="Pending decisions" icon={<Gavel size={18} />} to={`${base}/actions`} className="lg:col-span-2 xl:col-span-1">
+            <Panel title="Pending decisions" icon={<Gavel size={18} />} to={`${base}/actions?tab=decisions`} className="lg:col-span-2 xl:col-span-1">
               {decisions.length ? (
                 <ul className="flex flex-col divide-y divide-line">
                   {decisions.map((d) => (
@@ -203,7 +203,7 @@ export function ClientOverviewPage() {
                   {innovation.map((i) => (
                     <li key={i.id} className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium leading-snug">{i.title}</p>
+                        <Link to={`${base}/initiatives/${i.id}`} className="text-sm font-bold leading-snug hover:underline">{i.title}</Link>
                         <p className="mt-0.5 text-xs text-subtle">Champion: {personName(ws, i.championId) ?? 'Unassigned'}</p>
                       </div>
                       <InitiativeStatusBadge status={i.status} />

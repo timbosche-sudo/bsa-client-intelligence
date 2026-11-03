@@ -29,11 +29,28 @@ describe('v1 → v2 migration', () => {
     (v1.people as Record<string, unknown>[]).forEach((p) => delete p.homeClientId);
     (v1.projects as Record<string, unknown>[]).forEach((p) => delete p.documentLinks);
     const migrated = migrate(v1);
-    expect(migrated.schemaVersion).toBe(2);
+    expect(migrated.schemaVersion).toBe(3);
     expect(migrated.media).toEqual([]);
     expect(migrated.people.every((p) => p.homeClientId === null)).toBe(true);
     expect(migrated.projects.every((p) => Array.isArray(p.documentLinks))).toBe(true);
     expect(migrated.projects).toHaveLength(createDemoSeed().projects.length);
+  });
+});
+
+describe('v2 → v3 migration', () => {
+  it('adds RACI fields, risk initiative links and the restart template', () => {
+    const v2 = structuredClone(createDemoSeed()) as unknown as Record<string, unknown>;
+    v2.schemaVersion = 2;
+    delete v2.checklistTemplates;
+    delete v2.checklists;
+    for (const k of ['initiatives', 'actions', 'decisions']) (v2[k] as Record<string, unknown>[]).forEach((r) => (delete r.consultedIds, delete r.informedIds));
+    (v2.risks as Record<string, unknown>[]).forEach((r) => delete r.initiativeId);
+    const m = migrate(v2);
+    expect(m.schemaVersion).toBe(3);
+    expect(m.actions.every((a) => Array.isArray(a.consultedIds) && Array.isArray(a.informedIds))).toBe(true);
+    expect(m.risks.every((r) => r.initiativeId === null)).toBe(true);
+    expect(m.checklistTemplates.map((t) => t.items.length)).toEqual([8]);
+    expect(m.checklists).toEqual([]);
   });
 });
 

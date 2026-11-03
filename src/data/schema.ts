@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import type { Dataset } from '@/domain/types';
+import { hospitalRestartTemplate } from '@/domain/checklistTemplates';
 
 /** Bump when the persisted Dataset shape changes, and add a migration below. */
-export const SCHEMA_VERSION = 2;
+export const SCHEMA_VERSION = 3;
 
 /**
  * Structural envelope validation. Deep per-record validation is added with the editing forms
@@ -30,6 +31,8 @@ export const datasetEnvelope = z.object({
   meetings: z.array(scoped),
   reports: z.array(scoped),
   media: z.array(record.extend({ ownerId: z.string().min(1), ownerType: z.enum(['person', 'project']) })),
+  checklistTemplates: z.array(record),
+  checklists: z.array(scoped.extend({ projectId: z.string().min(1) })),
   activity: z.array(z.object({ id: z.string() }).passthrough()),
 });
 
@@ -44,6 +47,24 @@ const migrations: Record<number, Migration> = {
     people: (d.people as Record<string, unknown>[]).map((p) => ({ homeClientId: null, ...p })),
     projects: (d.projects as Record<string, unknown>[]).map((p) => ({ documentLinks: [], ...p })),
   }),
+  // v2 → v3: lightweight RACI fields, risk→initiative link, restart checklists (Stage 3).
+  2: (d) => {
+    const raci = (rows: unknown) => (rows as Record<string, unknown>[]).map((r) => ({ consultedIds: [], informedIds: [], ...r }));
+    return {
+      ...d,
+      initiatives: raci(d.initiatives),
+      actions: raci(d.actions),
+      decisions: raci(d.decisions),
+      risks: (d.risks as Record<string, unknown>[]).map((r) => ({ initiativeId: null, ...r })),
+      checklistTemplates: Array.isArray(d.checklistTemplates)
+        ? d.checklistTemplates
+        : // Provide the restart template to the Houston Methodist workspace when it exists.
+          (d.clients as { id: string }[]).some((c) => c.id === 'client_houston_methodist')
+          ? [hospitalRestartTemplate('client_houston_methodist')]
+          : [],
+      checklists: Array.isArray(d.checklists) ? d.checklists : [],
+    };
+  },
 };
 
 export class SchemaError extends Error {}

@@ -93,9 +93,11 @@ export function findPersonReferences(d: Dataset, personId: ID): string[] {
     if (ids.includes(personId)) refs.push(`Assigned to project "${p.name}"`);
   });
   d.workstreams.filter((w) => w.championId === personId).forEach((w) => refs.push(`Champion of workstream "${w.title}"`));
-  d.initiatives.filter((i) => i.championId === personId || i.participantIds.includes(personId)).forEach((i) => refs.push(`Initiative "${i.title}"`));
-  d.actions.filter((a) => a.ownerId === personId || a.participantIds.includes(personId)).forEach((a) => refs.push(`Action "${a.title}"`));
-  d.decisions.filter((x) => x.ownerId === personId || x.participantIds.includes(personId)).forEach((x) => refs.push(`Decision "${x.title}"`));
+  const inRaci = (r: { participantIds: ID[]; consultedIds?: ID[]; informedIds?: ID[] }) => r.participantIds.includes(personId) || !!r.consultedIds?.includes(personId) || !!r.informedIds?.includes(personId);
+  d.initiatives.filter((i) => i.championId === personId || inRaci(i)).forEach((i) => refs.push(`Initiative "${i.title}"`));
+  d.actions.filter((a) => a.ownerId === personId || inRaci(a)).forEach((a) => refs.push(`Action "${a.title}"`));
+  d.decisions.filter((x) => x.ownerId === personId || inRaci(x) || x.approval?.approvedById === personId).forEach((x) => refs.push(`Decision "${x.title}"`));
+  (d.checklists ?? []).filter((c) => c.items.some((i) => i.ownerId === personId)).forEach((c) => refs.push(`Checklist "${c.templateName}"`));
   d.risks.filter((r) => r.ownerId === personId).forEach((r) => refs.push(`Risk "${r.title}"`));
   d.meetings.filter((m) => m.facilitatorId === personId || m.attendeeIds.includes(personId)).forEach((m) => refs.push(`Meeting "${m.title}"`));
   return refs;
@@ -303,6 +305,7 @@ export function findProjectReferences(d: Dataset, projectId: ID): string[] {
   d.risks.filter((r) => r.projectId === projectId).forEach((r) => refs.push(`Risk "${r.title}"`));
   d.milestones.filter((m) => m.projectId === projectId).forEach((m) => refs.push(`Milestone "${m.title}"`));
   d.initiatives.filter((i) => i.relatedProjectIds.includes(projectId)).forEach((i) => refs.push(`Initiative "${i.title}"`));
+  (d.checklists ?? []).filter((c) => c.projectId === projectId).forEach((c) => refs.push(`Checklist "${c.templateName}"`));
   return refs;
 }
 

@@ -46,7 +46,7 @@ export function MilestonesTab({ ws, project }: { ws: ClientWorkspace; project: P
   );
 }
 
-function MilestoneSheet({ ws, milestone, onClose }: { ws: ClientWorkspace; milestone: Milestone; onClose(): void }) {
+export function MilestoneSheet({ ws, milestone, onClose }: { ws: ClientWorkspace; milestone: Milestone; onClose(): void }) {
   const [m, setM] = useState(milestone);
   const [error, setError] = useState('');
   const isNew = !ws.milestones.some((x) => x.id === milestone.id);

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BarChart3, ClipboardCheck, Gavel, Layers, Search, Target, User } from 'lucide-react';
+import { AlertTriangle, BarChart3, ClipboardCheck, Gavel, Layers, Search, Target, User } from 'lucide-react';
 import { Dialog } from '@/components/ui/Dialog';
 import { searchWorkspace, type ClientWorkspace, type SearchKind } from '@/data/repository';
 import { cn } from '@/lib/cn';
@@ -12,6 +12,7 @@ const icons: Record<SearchKind, typeof Search> = {
   initiative: Target,
   action: ClipboardCheck,
   decision: Gavel,
+  risk: AlertTriangle,
 };
 
 /** Workspace-scoped search: only records of the current client are searchable. */

@@ -6,7 +6,7 @@ export type AppMode = 'prototype' | 'production';
 
 export const environment = {
   mode: (import.meta.env.VITE_APP_MODE === 'production' ? 'production' : 'prototype') as AppMode,
-  appVersion: '0.2.0',
+  appVersion: '0.3.0',
   /** AI features are disabled until an approved, server-side model integration exists (Stage 5 interface). */
   aiEnabled: false,
   /** The public demo build ships with fictional sample records only. */

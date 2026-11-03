@@ -272,9 +272,18 @@ export interface Workstream extends BaseRecord, ClientScoped {
   confidentialityNote: string;
 }
 
+/**
+ * Lightweight RACI (Part 10.4). The record's owner/champion is Accountable; participants are Supporting
+ * (Responsible). Consulted and Informed are optional and never required for small actions.
+ */
+export interface RaciFields {
+  consultedIds: ID[];
+  informedIds: ID[];
+}
+
 export type InitiativeStatus = 'proposed' | 'active' | 'on_hold' | 'complete' | 'cancelled';
 
-export interface Initiative extends BaseRecord, ClientScoped {
+export interface Initiative extends BaseRecord, ClientScoped, RaciFields {
   workstreamId: ID | null;
   title: string;
   description: string;
@@ -291,7 +300,7 @@ export interface Initiative extends BaseRecord, ClientScoped {
 export type ActionStatus = 'not_started' | 'in_progress' | 'waiting' | 'blocked' | 'complete' | 'cancelled';
 export type Priority = 'high' | 'medium' | 'low';
 
-export interface ActionItem extends BaseRecord, ClientScoped {
+export interface ActionItem extends BaseRecord, ClientScoped, RaciFields {
   title: string;
   description: string;
   ownerId: ID | null;
@@ -310,7 +319,7 @@ export interface ActionItem extends BaseRecord, ClientScoped {
 
 export type DecisionStatus = 'proposed' | 'under_review' | 'approved' | 'deferred' | 'rejected' | 'superseded';
 
-export interface Decision extends BaseRecord, ClientScoped {
+export interface Decision extends BaseRecord, ClientScoped, RaciFields {
   title: string;
   description: string;
   date: ISODate | null;
@@ -341,6 +350,7 @@ export interface Risk extends BaseRecord, ClientScoped {
   ownerId: ID | null;
   projectId: ID | null;
   workstreamId: ID | null;
+  initiativeId: ID | null;
   status: 'open' | 'monitoring' | 'closed';
   mitigation: string;
   confidentiality: Confidentiality;
@@ -357,6 +367,72 @@ export interface Milestone extends BaseRecord, ClientScoped {
   initiativeId: ID | null;
   workstreamId: ID | null;
   status: 'upcoming' | 'complete' | 'missed' | 'cancelled';
+}
+
+/* ───────────────────────── Restart checklists ───────────────────────── */
+
+export interface ChecklistTemplateItem {
+  id: ID;
+  title: string;
+  /** Considerations / prompts shown to the team. */
+  guidance: string[];
+}
+
+/** Reusable project readiness template. null clientId = available to every client. */
+export interface ChecklistTemplate extends BaseRecord {
+  clientId: ID | null;
+  name: string;
+  description: string;
+  source: string;
+  items: ChecklistTemplateItem[];
+}
+
+export type ChecklistItemStatus = 'not_started' | 'in_progress' | 'complete' | 'not_applicable';
+
+export interface ChecklistItem {
+  id: ID;
+  title: string;
+  guidance: string[];
+  status: ChecklistItemStatus;
+  ownerId: ID | null;
+  dueDate: ISODate | null;
+  notes: string;
+}
+
+export interface ProgramComparisonRow {
+  id: ID;
+  component: string;
+  original: string;
+  approved: string;
+  proposed: string;
+  note: string;
+}
+
+export interface ChangeLogEntry {
+  id: ID;
+  date: ISODate | null;
+  change: string;
+  driver: string;
+  costImpact: string;
+  approvedBy: string;
+  status: 'proposed' | 'approved' | 'rejected';
+}
+
+/**
+ * A checklist applied to one project. It can only be created after someone records that the project's
+ * identity and scope are confirmed (Part 9). Template items are copied, so later template edits don't
+ * rewrite history.
+ */
+export interface ProjectChecklist extends BaseRecord, ClientScoped {
+  projectId: ID;
+  templateId: ID | null;
+  templateName: string;
+  identityConfirmation: { confirmedBy: string; confirmedAt: ISODateTime; note: string };
+  items: ChecklistItem[];
+  programComparison: ProgramComparisonRow[];
+  changeLog: ChangeLogEntry[];
+  leadershipSummary: string;
+  confidentiality: Confidentiality;
 }
 
 /* ───────────────────────── Meetings ───────────────────────── */
@@ -472,6 +548,8 @@ export interface Dataset {
   meetings: Meeting[];
   reports: ReportRecord[];
   media: MediaRecord[];
+  checklistTemplates: ChecklistTemplate[];
+  checklists: ProjectChecklist[];
   activity: ActivityEntry[];
 }
 
@@ -488,6 +566,7 @@ export const CLIENT_SCOPED_COLLECTIONS = [
   'milestones',
   'meetings',
   'reports',
+  'checklists',
 ] as const satisfies readonly (keyof Dataset)[];
 
 export type ClientScopedCollection = (typeof CLIENT_SCOPED_COLLECTIONS)[number];
