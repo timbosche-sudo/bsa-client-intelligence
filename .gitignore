@@ -1,0 +1,35 @@
+# Dependencies & build output
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+
+# Environment & secrets — never commit
+.env
+.env.*
+!.env.example
+
+# ── Confidential data safeguards ──────────────────────────────
+# Real client data, seed files, backups and media stay on local machines only.
+private-data/*
+!private-data/README.md
+*.seed.json
+*_Seed.json
+*_seed.json
+*Portfolio_Seed*.json
+bsa-backup-*.json
+bsa-client-intelligence-backup-*.json
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+uploads/
+media/
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.log
