@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Outlet, useParams } from 'react-router-dom';
-import { Menu, Search } from 'lucide-react';
+import { Menu, PanelLeftClose, PanelLeftOpen, Search } from 'lucide-react';
 import { usePreferences } from '@/state/preferences';
 import { useWorkspace } from '@/state/useWorkspace';
 import { ClientSelector } from './ClientSelector';
@@ -18,6 +18,8 @@ export function AppShell() {
   const [navOpen, setNavOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const setLastClientId = usePreferences((s) => s.setLastClientId);
+  const sidebarCollapsed = usePreferences((s) => s.sidebarCollapsed);
+  const toggleSidebar = usePreferences((s) => s.toggleSidebar);
 
   useEffect(() => {
     if (workspace) setLastClientId(workspace.client.id);
@@ -28,6 +30,10 @@ export function AppShell() {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
         setSearchOpen(true);
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === '\\') {
+        e.preventDefault();
+        usePreferences.getState().toggleSidebar();
       }
     };
     window.addEventListener('keydown', onKey);
@@ -54,6 +60,17 @@ export function AppShell() {
               aria-label="Open navigation"
             >
               <Menu size={20} />
+            </button>
+            <button
+              type="button"
+              onClick={toggleSidebar}
+              className="hidden size-11 shrink-0 items-center justify-center rounded-lg text-muted hover:bg-surface-3 hover:text-ink lg:inline-flex"
+              aria-label={sidebarCollapsed ? 'Expand navigation' : 'Collapse navigation'}
+              aria-expanded={!sidebarCollapsed}
+              aria-keyshortcuts="Control+Backslash Meta+Backslash"
+              title={sidebarCollapsed ? 'Show menu labels (⌘\\)' : 'Collapse menu to icons (⌘\\)'}
+            >
+              {sidebarCollapsed ? <PanelLeftOpen size={20} /> : <PanelLeftClose size={20} />}
             </button>
             <div className="min-w-0 flex-1">
               <ClientSelector current={workspace.client} />
