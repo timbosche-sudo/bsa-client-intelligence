@@ -262,6 +262,7 @@ function MapStep({ step, clientCategories, onChange, onBack, onContinue }: { ste
 const STATUS: Record<PreviewRow['status'], { label: string; tone: Tone }> = {
   new: { label: 'New', tone: 'accent' },
   match: { label: 'Existing match', tone: 'neutral' },
+  ambiguous: { label: 'Needs your decision', tone: 'caution' },
   duplicate_in_file: { label: 'Duplicate in file', tone: 'negative' },
   invalid: { label: 'Invalid', tone: 'negative' },
 };
@@ -274,6 +275,7 @@ function ReviewStep({ preview, onChange, onBack, onCommit }: { preview: Preview;
   const counts = {
     new: rows.filter((r) => r.status === 'new').length,
     match: rows.filter((r) => r.status === 'match').length,
+    ambiguous: rows.filter((r) => r.status === 'ambiguous').length,
     updates: rows.filter((r) => r.changes.length).length,
     conflicts: rows.filter((r) => r.changes.some((c) => c.conflict)).length,
     missing: rows.filter((r) => r.missing.length).length,
@@ -301,10 +303,11 @@ function ReviewStep({ preview, onChange, onBack, onCommit }: { preview: Preview;
             {preview.source.clientName && ` · client ${preview.source.clientName}`}
           </span>
         </p>
-        <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+        <dl className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-7">
           {[
             ['New projects', counts.new],
             ['Existing matches', counts.match],
+            ['Need your decision', counts.ambiguous],
             ['With field updates', counts.updates],
             ['With conflicts', counts.conflicts],
             ['Missing key values', counts.missing],
@@ -377,7 +380,12 @@ function PreviewRowCard({ row, actions, onAction }: { row: PreviewRow; actions: 
           <ChevronDown size={18} className={cn('mt-0.5 shrink-0 text-subtle transition-transform', open && 'rotate-180')} aria-hidden />
           <span className="min-w-0">
             <span className="block font-bold">{v.name || <span className="text-subtle">Unnamed record</span>}</span>
-            <span className="tabular block text-xs text-subtle">{row.candidate.ref} · {v.projectNumber ?? 'No project number'}{row.existing && ` · matches “${row.existing.name}”`}</span>
+            <span className="tabular block text-xs text-subtle">
+              {row.candidate.ref} · {v.projectNumber ?? 'No project number'}
+              {row.candidate.sourceRecordId && ` · id ${row.candidate.sourceRecordId}`}
+              {row.status === 'match' && row.existing && ` · matches “${row.existing.name}” by ${row.matchedBy === 'source-id' ? 'record id' : 'project number'}`}
+              {row.status === 'ambiguous' && row.existing && ` · possible match “${row.existing.name}”`}
+            </span>
           </span>
         </button>
         <div className="flex flex-wrap items-center gap-2 md:justify-end">
@@ -415,7 +423,12 @@ function PreviewRowCard({ row, actions, onAction }: { row: PreviewRow; actions: 
               </div>
             </div>
           )}
-          {row.status === 'new' && <IncomingSummary row={row} />}
+          {(row.status === 'new' || row.status === 'ambiguous') && <IncomingSummary row={row} />}
+          {(row.status === 'match' || row.status === 'ambiguous') && (
+            <p className="text-sm text-muted lg:col-span-2">
+              <span className="font-bold text-ink">Never changed by an update:</span> images and documents, leadership and delivery assignments, readiness dimension assessments (and overall readiness when the file says Not Assessed), milestones, actions, decisions, risks, checklists and history.
+            </p>
+          )}
           {(row.errors.length > 0 || row.warnings.length > 0 || row.infos.length > 0 || row.missing.length > 0) && (
             <ul className="flex flex-col gap-2">
               {row.errors.map((i, k) => <IssueLine key={`e${k}`} issue={i} />)}

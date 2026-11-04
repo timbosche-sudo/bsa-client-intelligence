@@ -346,7 +346,12 @@ export function parseTable(rows: Cell[][], headerRow: number, mapping: Mapping, 
 
 /* ───────────────────────── Preview ───────────────────────── */
 
-export type RowStatus = 'new' | 'match' | 'duplicate_in_file' | 'invalid';
+/**
+ * - new: no existing project corresponds to this record.
+ * - match: the existing project is identified with certainty (same stable source id, or an unambiguous project number).
+ * - ambiguous: the project number is shared and the right target cannot be determined; nothing happens unless you choose.
+ */
+export type RowStatus = 'new' | 'match' | 'ambiguous' | 'duplicate_in_file' | 'invalid';
 export type RowAction = 'add' | 'update' | 'skip';
 
 export interface FieldChange {
@@ -361,6 +366,8 @@ export interface FieldChange {
 export interface PreviewRow {
   candidate: Candidate;
   status: RowStatus;
+  /** How `existing` was identified. */
+  matchedBy: 'source-id' | 'project-number' | null;
   existing: Project | null;
   changes: FieldChange[];
   missing: string[];
@@ -429,6 +436,14 @@ function display(key: FieldKey, v: unknown, ctx: ImportContext): string {
   return String(v);
 }
 
+/**
+ * Incoming values that must never overwrite existing data: blanks, and "Not Assessed" readiness
+ * (the absence of an assessment is not an assessment, so it never replaces one a leader recorded).
+ */
+function isIgnorableIncoming(key: FieldKey, v: unknown): boolean {
+  return isEmptyValue(v) || (key === 'overallReadiness' && v === 'not_assessed');
+}
+
 function same(key: FieldKey, current: unknown, incoming: unknown): boolean {
   if (key === 'principal') {
     const c = current as { id: ID | null; raw: string | null };
@@ -450,6 +465,12 @@ export function buildPreview(parsed: ParsedImport, data: Dataset, ctx: ImportCon
   }
   const fileBlocked = fileIssues.some((i) => i.level === 'error');
   const existing = data.projects.filter((p) => p.clientId === client.id);
+  const num = (x: string | null | undefined) => x?.trim().toLowerCase() || null;
+  const sid = (c: Candidate) => c.sourceRecordId?.trim() || null;
+  const existingBySid = new Map(existing.filter((p) => p.provenance?.sourceRecordId).map((p) => [p.provenance!.sourceRecordId!, p]));
+  // Existing projects already claimed by some record in this file through its stable id.
+  const claimed = new Set(parsed.candidates.map((c) => (sid(c) ? existingBySid.get(sid(c)!)?.id : undefined)).filter(Boolean) as string[]);
+  const seenIds = new Map<string, string>();
   const seenNumbers = new Map<string, string>();
 
   const rows = parsed.candidates.map((c): PreviewRow => {
@@ -467,37 +488,81 @@ export function buildPreview(parsed: ParsedImport, data: Dataset, ctx: ImportCon
     if (v.revenuePeriods) issues.push({ level: 'info', field: 'revenuePeriods', message: 'Revenue period calendar labels are unresolved and will not be inferred.' });
     if (v.projectNumber && parsed.source.clientCode && !v.projectNumber.startsWith(parsed.source.clientCode)) issues.push({ level: 'warning', field: 'projectNumber', message: `Project number does not begin with client code ${parsed.source.clientCode}.` });
 
-    const number = v.projectNumber?.trim().toLowerCase() || null;
+    const id = sid(c);
+    const number = num(v.projectNumber);
+    // Other records in this file that share the project number.
+    const siblings = number ? parsed.candidates.filter((o) => o !== c && num(o.values.projectNumber) === number) : [];
     let status: RowStatus = 'new';
     let match: Project | null = null;
-    if (number && seenNumbers.has(number)) {
+    let matchedBy: PreviewRow['matchedBy'] = null;
+
+    if (id && seenIds.has(id)) {
       status = 'duplicate_in_file';
-      issues.push({ level: 'error', field: 'projectNumber', message: `Duplicate of ${seenNumbers.get(number)} in this file.` });
+      issues.push({ level: 'error', message: `Same record id "${id}" as ${seenIds.get(id)} in this file.` });
+    } else if (!id && number && seenNumbers.has(number)) {
+      status = 'duplicate_in_file';
+      issues.push({ level: 'error', field: 'projectNumber', message: `Duplicate of ${seenNumbers.get(number)} in this file (no record id to tell them apart).` });
     } else {
-      if (number) seenNumbers.set(number, c.ref);
-      match = number ? existing.find((p) => p.projectNumber?.trim().toLowerCase() === number) ?? null : null;
-      if (!match && !number && v.name) {
+      if (id) seenIds.set(id, c.ref);
+      if (number) seenNumbers.set(number, seenNumbers.get(number) ?? c.ref);
+      if (siblings.length && id && siblings.every((o) => sid(o) && sid(o) !== id)) {
+        issues.push({ level: 'info', field: 'projectNumber', message: `Shares project number ${v.projectNumber} with ${siblings.map((o) => `${o.ref} (“${o.values.name}”)`).join(', ')}. Kept as a separate scope entry; the two are never merged automatically.` });
+      }
+      const byId = id ? existingBySid.get(id) ?? null : null;
+      if (byId) {
+        match = byId;
+        matchedBy = 'source-id';
+        status = 'match';
+      } else if (number) {
+        const hits = existing.filter((p) => num(p.projectNumber) === number);
+        const open = hits.filter((p) => !claimed.has(p.id));
+        const certain = open.length === 1 && siblings.length === 0 && (!id || !open[0].provenance?.sourceRecordId);
+        if (certain) {
+          match = open[0];
+          matchedBy = 'project-number';
+          status = 'match';
+          if (id) issues.push({ level: 'info', message: `Matched by project number. The record id "${id}" will be stored so future imports match it directly.` });
+        } else if (open.length) {
+          status = 'ambiguous';
+          issues.push({
+            level: 'warning',
+            field: 'projectNumber',
+            message: `Project number ${v.projectNumber} is shared${siblings.length ? ` by ${siblings.length + 1} records in this file` : ''} and also used by existing project${open.length > 1 ? 's' : ''} ${open.map((p) => `“${p.name}”`).join(', ')}. It can’t be matched with certainty, so nothing happens unless you choose: add as a new project, update “${open[0].name}”, or skip.`,
+          });
+          match = open[0];
+        } else if (hits.length) {
+          issues.push({ level: 'info', field: 'projectNumber', message: `Existing project${hits.length > 1 ? 's' : ''} ${hits.map((p) => `“${p.name}”`).join(', ')} share${hits.length > 1 ? '' : 's'} this project number but ${hits.length > 1 ? 'are' : 'is'} a different entry in this file. Will be added separately.` });
+        }
+      } else if (v.name) {
         const byName = existing.find((p) => p.name.trim().toLowerCase() === String(v.name).trim().toLowerCase());
         if (byName) issues.push({ level: 'warning', message: `No project number; an existing project has the same name ("${byName.name}"). Adding would create a possible duplicate.` });
       }
-      if (match) status = 'match';
     }
     const errors = issues.filter((i) => i.level === 'error');
-    if (errors.length && status !== 'duplicate_in_file') status = status === 'match' ? 'match' : 'invalid';
+    if (errors.length && status !== 'duplicate_in_file') status = status === 'match' || status === 'ambiguous' ? status : 'invalid';
 
     const changes: FieldChange[] = [];
     if (match) {
       for (const key of Object.keys(v) as FieldKey[]) {
         const incoming = v[key];
-        if (isEmptyValue(incoming)) continue; // blank source values never erase existing data
+        if (isIgnorableIncoming(key, incoming)) continue; // blank source values never erase existing data
         const current = projectValue(match, key);
+        if (key === 'principal' && match.businessDevelopment.relationshipPrincipalId) {
+          // An assigned principal is a leadership decision made in the app; the file never replaces it.
+          if (!same(key, current, incoming)) issues.push({ level: 'info', field: 'principal', message: `File lists principal "${(incoming as { raw: string | null }).raw}"; the assigned principal (${display(key, current, ctx)}) is kept.` });
+          continue;
+        }
         if (same(key, current, incoming)) continue;
+        if (key === 'revenuePeriods') {
+          const tot = (a: unknown) => ((a as (number | null)[] | null) ?? []).reduce<number>((s, x) => s + (x ?? 0), 0);
+          if (tot(current) > 0 && tot(incoming) === 0) issues.push({ level: 'warning', field: 'revenuePeriods', message: `The file's revenue projection is all zero. Updating would replace the current projection (${formatCurrency(tot(current))} total). Confirm this is intended before updating.` });
+        }
         changes.push({ key, label: fieldDef(key).label, from: display(key, current, ctx), to: display(key, incoming, ctx), conflict: !isEmptyValue(current) });
       }
     }
     const missing = FIELDS.filter((f) => f.important && isEmptyValue(v[f.key as keyof Values])).map((f) => f.label);
     const action: RowAction = fileBlocked || errors.length ? 'skip' : status === 'new' ? 'add' : 'skip';
-    return { candidate: c, status, existing: match, changes, missing, errors, warnings: issues.filter((i) => i.level === 'warning'), infos: issues.filter((i) => i.level === 'info'), action };
+    return { candidate: c, status, matchedBy, existing: match, changes, missing, errors, warnings: issues.filter((i) => i.level === 'warning'), infos: issues.filter((i) => i.level === 'info'), action };
   });
   return { source: parsed.source, fileIssues, rows };
 }
@@ -505,6 +570,7 @@ export function buildPreview(parsed: ParsedImport, data: Dataset, ctx: ImportCon
 /** Allowed actions for a row; rows with errors can only be skipped. */
 export function allowedActions(row: PreviewRow, fileBlocked: boolean): RowAction[] {
   if (fileBlocked || row.errors.length) return ['skip'];
+  if (row.status === 'ambiguous') return ['skip', 'add', 'update'];
   if (row.status === 'match') return row.changes.length ? ['skip', 'update'] : ['skip'];
   return ['add', 'skip'];
 }
@@ -517,7 +583,7 @@ function applyValues(p: Project, v: Values, onlyNonEmpty: boolean, source: Sourc
   const set = <K extends keyof Values>(k: K, fn: (val: NonNullable<Values[K]> | null) => void) => {
     if (!(k in v)) return;
     const val = v[k];
-    if (onlyNonEmpty && isEmptyValue(val)) return;
+    if (onlyNonEmpty && isIgnorableIncoming(k as FieldKey, val)) return;
     fn((val ?? null) as NonNullable<Values[K]> | null);
   };
   set('projectNumber', (x) => (n.projectNumber = x));
@@ -529,6 +595,7 @@ function applyValues(p: Project, v: Values, onlyNonEmpty: boolean, source: Sourc
   set('projectType', (x) => (n.projectType = x));
   set('sizeValue', (x) => (n.size = { ...n.size, value: x }));
   set('principal', (x) => {
+    if (onlyNonEmpty && bd.relationshipPrincipalId) return; // never replace an assigned principal
     bd.relationshipPrincipalId = x?.id ?? null;
     bd.relationshipPrincipalRaw = x?.id ? null : x?.raw ?? null;
   });
@@ -591,8 +658,11 @@ export function commitImport(d: Dataset, preview: Preview, clientId: ID, importe
         result.skipped++;
         continue;
       }
-      const next = { ...applyValues(current, row.candidate.values, true, preview.source), provenance: current.provenance ?? provenance };
-      upsertProject(d, next, importedBy, `Updated from ${preview.source.fileName} (${row.candidate.ref}): ${row.changes.map((c) => c.label).join(', ')}.`);
+      // Keep the original provenance, but record the stable source id when it wasn't known, so later imports match by id.
+      const kept = current.provenance ?? provenance;
+      const next = { ...applyValues(current, row.candidate.values, true, preview.source), provenance: kept.sourceRecordId ? kept : { ...kept, sourceRecordId: row.candidate.sourceRecordId } };
+      const changed = row.changes.map((c) => c.label).join(', ') || 'source record id';
+      upsertProject(d, next, importedBy, `Updated from ${preview.source.fileName} (${row.candidate.ref}): ${changed}.`);
       result.updated.push(current.id);
     }
   }

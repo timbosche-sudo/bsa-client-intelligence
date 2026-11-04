@@ -89,11 +89,15 @@ describe('seed JSON import', () => {
     expect(d.projects.filter((x) => x.projectNumber === '9999-0001')).toHaveLength(1);
   });
 
-  it('flags duplicates within the same file', () => {
+  it('keeps same-number records with distinct ids as separate entries, and flags id-less duplicates', () => {
     const d = createDemoSeed();
     const file = structuredClone(fictionalSeed);
     file.projects[1].project_number = '9999-0001';
-    const rows = seedPreview(d, file).rows;
+    let rows = seedPreview(d, file).rows;
+    expect(rows.map((r) => r.status)).toEqual(['new', 'new']);
+    expect(rows[1].infos.some((i) => /separate scope entry/.test(i.message))).toBe(true);
+    for (const p of file.projects) delete (p as { id?: string }).id;
+    rows = seedPreview(d, file).rows;
     expect(rows[1].status).toBe('duplicate_in_file');
     expect(rows[1].action).toBe('skip');
   });
@@ -146,5 +150,100 @@ describe('tabular import', () => {
     const p = d.projects.find((x) => x.projectNumber === '9999-0100')!;
     expect(p.businessDevelopment.revenueProjection!.basisNote).toContain('P1, P2');
     expect(p.provenance!.sourceRow).toBe(3);
+  });
+});
+
+describe('stable-id matching and shared project numbers', () => {
+  const rec = (id: string | undefined, number: string, name: string, fee: number, readiness = 'not_assessed') => ({
+    ...(id ? { id } : {}),
+    name,
+    project_number: number,
+    client: 'Houston Methodist',
+    studio: 'Houston',
+    principal: 'Puccetti, Craig',
+    pipeline_probability: 0.5,
+    discipline_fee_mix: { architecture: 0.9, engineering: 0, interiors: 0.1 },
+    bsa_fee: fee,
+    revenue_projection_12_periods: Array(12).fill(0),
+    portfolio_category: 'potential',
+    restart_readiness: readiness,
+    source_row: 1,
+  });
+  const file = (projects: unknown[]) => ({ client: { name: 'Houston Methodist', client_code: '9999' }, source: { as_of: '2026-11-01' }, projects });
+
+  it('updates by record id, adds a same-number scope entry separately, and preserves user work', () => {
+    const d = createDemoSeed();
+    commitImport(d, seedPreview(d, file([rec('src-dco', '9999-0004', 'Spring DCO 02', 500)])), HM, null);
+    const p = d.projects.find((x) => x.provenance?.sourceRecordId === 'src-dco')!;
+    // User work recorded in the app after the first import.
+    const dim = Object.keys(p.readiness)[0];
+    p.readiness[dim] = { status: 'ready', note: 'Confirmed', assessedById: 'person_craig_puccetti', assessedAt: '2026-11-02T00:00:00.000Z' };
+    p.overallReadiness = { status: 'partially_ready', note: 'Leader view', assessedById: 'person_craig_puccetti', assessedAt: '2026-11-02T00:00:00.000Z' };
+    p.imageIds = ['media_x'];
+    p.delivery.projectManagerId = 'person_craig_puccetti';
+    d.actions[0].projectId = p.id;
+
+    const preview = seedPreview(d, file([rec('src-base', '9999-0004', 'Spring base scope', 5000), rec('src-dco', '9999-0004', 'Spring DCO 02 (2028)', 550), rec('src-new', '9999-0099', 'New clinic', 100)]));
+    const [base, dco, fresh] = preview.rows;
+    expect(base).toMatchObject({ status: 'new', action: 'add', existing: null });
+    expect(base.infos.some((i) => /separate scope entry/.test(i.message))).toBe(true);
+    expect(dco).toMatchObject({ status: 'match', matchedBy: 'source-id' });
+    expect(dco.existing!.id).toBe(p.id);
+    expect(dco.changes.map((c) => c.key).sort()).toEqual(['bsaFee', 'name']); // "not_assessed" never shows as a change
+    expect(fresh.status).toBe('new');
+
+    dco.action = 'update';
+    const result = commitImport(d, preview, HM, null);
+    expect(result).toMatchObject({ added: expect.any(Array), updated: [p.id] });
+    expect(result.added).toHaveLength(2);
+    const after = d.projects.find((x) => x.id === p.id)!;
+    expect(after).toMatchObject({ name: 'Spring DCO 02 (2028)', imageIds: ['media_x'] });
+    expect(after.businessDevelopment.bsaFee).toBe(550);
+    expect(after.overallReadiness.status).toBe('partially_ready');
+    expect(after.readiness[dim].status).toBe('ready');
+    expect(after.delivery.projectManagerId).toBe('person_craig_puccetti');
+    expect(d.actions[0].projectId).toBe(p.id);
+    expect(d.projects.filter((x) => x.projectNumber === '9999-0004')).toHaveLength(2);
+
+    // Re-importing the same file creates nothing new.
+    const again = seedPreview(d, file([rec('src-base', '9999-0004', 'Spring base scope', 5000), rec('src-dco', '9999-0004', 'Spring DCO 02 (2028)', 550), rec('src-new', '9999-0099', 'New clinic', 100)]));
+    expect(again.rows.map((r) => r.status)).toEqual(['match', 'match', 'match']);
+    expect(again.rows.every((r) => r.action === 'skip' && r.changes.length === 0)).toBe(true);
+  });
+
+  it('never auto-merges a shared number onto a project without a record id', () => {
+    const d = createDemoSeed();
+    const manual = { ...structuredClone(d.projects[0]), id: 'project_manual', isSample: undefined, projectNumber: '9999-0004', provenance: null };
+    d.projects.push(manual);
+    const preview = seedPreview(d, file([rec('src-base', '9999-0004', 'Spring base scope', 5000), rec('src-dco', '9999-0004', 'Spring DCO 02', 500)]));
+    expect(preview.rows.map((r) => r.status)).toEqual(['ambiguous', 'ambiguous']);
+    expect(preview.rows.every((r) => r.action === 'skip')).toBe(true);
+    expect(allowedActions(preview.rows[0], false)).toEqual(['skip', 'add', 'update']);
+  });
+
+  it('falls back to an unambiguous project number and then stores the record id', () => {
+    const d = createDemoSeed();
+    const manual = { ...structuredClone(d.projects[0]), id: 'project_manual', isSample: undefined, projectNumber: '9999-0007', provenance: null };
+    d.projects.push(manual);
+    const preview = seedPreview(d, file([rec('src-7', '9999-0007', 'Renamed', 700)]));
+    expect(preview.rows[0]).toMatchObject({ status: 'match', matchedBy: 'project-number' });
+    preview.rows[0].action = 'update';
+    commitImport(d, preview, HM, null);
+    expect(d.projects.find((x) => x.id === 'project_manual')!.provenance!.sourceRecordId).toBe('src-7');
+  });
+
+  it('warns when an all-zero projection would replace an existing one', () => {
+    const d = createDemoSeed();
+    const withRevenue = { ...rec('src-r', '9999-0005', 'R', 900), revenue_projection_12_periods: Array(12).fill(10) };
+    commitImport(d, seedPreview(d, file([withRevenue])), HM, null);
+    const row = seedPreview(d, file([rec('src-r', '9999-0005', 'R', 900)])).rows[0];
+    expect(row.status).toBe('match');
+    expect(row.warnings.some((w) => /all zero/.test(w.message))).toBe(true);
+  });
+
+  it('still rejects true duplicates', () => {
+    const d = createDemoSeed();
+    const rows = seedPreview(d, file([rec('same', '9999-0001', 'A', 1), rec('same', '9999-0002', 'B', 1), rec(undefined, '9999-0003', 'C', 1), rec(undefined, '9999-0003', 'D', 1)])).rows;
+    expect(rows.map((r) => r.status)).toEqual(['new', 'duplicate_in_file', 'new', 'duplicate_in_file']);
   });
 });
