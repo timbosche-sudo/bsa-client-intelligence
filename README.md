@@ -13,8 +13,8 @@ Strategic client leadership and portfolio management platform for **BSA** Client
 | 2 | Leadership & people, headshots, portfolio cards/table/detail, images, JSON + Excel/CSV import, BSA brand standards | ✅ Complete |
 | 3 | Workstreams, initiatives, actions, decisions, risks, restart checklists, accountability views | ✅ Complete |
 | 4 | Guided Meeting Mode: creation, templates, facilitation, closeout, finalization, history | ✅ Complete |
-| 5 | Reporting (PDF) and AI interface | Next |
-| 6 | Administration, backup/restore, QA, PWA, deployment hardening | |
+| 5 | Reports (4 types, PDF), confidentiality & release approval, report history, AI interface (disabled) | ✅ Complete |
+| 6 | Administration, backup/restore, QA, PWA, deployment hardening | Next |
 
 ## Local development
 
@@ -67,6 +67,23 @@ GitHub Pages sites are **public**. Only publish the fictional demo dataset.
 - **Finalize**: requires naming the approver and an explicit review acknowledgement. The record is frozen as a snapshot. Later changes to actions or decisions don't rewrite it, and the record shows what has changed since.
 - **Amend**: a finalized record can only change through a recorded amendment (reason and requester) and must then be finalized again. The amendment history is kept.
 - **History & continuity**: a chronological archive, "since the previous meeting" changes, carried-over actions, and *Schedule next meeting* carrying the agreed topics forward.
+
+## Reports (Stage 5)
+
+*Reports* generates four branded PDF reports from the current records:
+
+| Report | Audience | Notes |
+|---|---|---|
+| Internal Client Team Report | BSA, internal | Optionally tied to a meeting; executive summary typed or drafted from records (not AI) |
+| Individual Accountability Brief | One person | Their actions, initiatives, decisions, dependencies and related projects |
+| Client Alignment Report | Client, external | **Only** records marked “Approved for Client Release”; proposed requests vs confirmed commitments; never risks, fees, readiness, staffing, notes or meeting discussion |
+| Portfolio Readiness Report | BSA, internal | Choose categories; explicit readiness assessments, resource gaps, decisions, risks, actions |
+
+- **Preview, then export.** Each report is frozen when generated, so the preview is exactly what exports. Use *New version* to pick up later changes.
+- **Release approval.** Client Alignment reports start as drafts with a watermark, and their PDFs say “DRAFT — NOT FOR DISTRIBUTION”. Approving for release requires naming the approver and confirming four review checks. Released reports are kept as a record and can only be archived.
+- **PDF format.** Letter size, Lato font, BSA header, a confidentiality designation and “Page x of y” on every page. Table rows never split across pages.
+- **Delivery** is download only; there is no automated email. Microsoft 365 distribution is a production item.
+- **AI** is an interface only (`src/ai/aiProvider.ts`), and it is **disabled**. No data leaves the browser. Any future provider must run server-side and return suggestions that a person reviews before saving.
 
 ## Importing projects
 

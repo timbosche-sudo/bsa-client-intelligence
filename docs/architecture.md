@@ -52,6 +52,13 @@ Notes autosave with a debounce and are not written to the activity log, to avoid
 Finalized meetings reject edits in the data layer, and amendments reopen closeout with a recorded reason.
 Actions, decisions and issues captured in a meeting carry `meetingId` and cannot be deleted, only cancelled or closed.
 
+## Reporting
+
+Builders are pure functions over a `ClientWorkspace`, so other clients' data cannot appear in a report. The same `ReportDoc` drives the on-screen preview and the PDF.
+A report's content is frozen when it is generated: exports always match what was reviewed or approved.
+The client alignment builder filters to `confidentiality === 'approved'` and has no code path for risks, fees, readiness, staffing or notes.
+Tests in `src/reports/reports.test.ts` assert these exclusions.
+
 ## Accountability model
 
 Owner/champion = **Accountable**; participants = **Supporting**; optional `consultedIds` / `informedIds` complete a lightweight RACI.
@@ -83,7 +90,7 @@ the user is offered a download of it first.
 | 2 ✅ | IndexedDB media store behind `MediaStore`; people/leadership/project editing; JSON/Excel/CSV import pipeline (`features/import`: parsers → candidates → preview → approved commit) |
 | 3 ✅ | `data/strategyMutations.ts` (workstreams, initiatives, actions, decisions, risks, checklists with integrity rules), `data/accountability.ts` (person / workstream views), `features/strategy` (shared record editors via `useRecordSheet`), schema v3 |
 | 4 ✅ | `data/meetingMutations.ts` (lifecycle scheduled → in_progress → closeout → finalized, snapshot, amendments), `data/meetingSelectors.ts` (captures, continuity, rule-based suggestions), `features/meetings` (Meeting Mode route outside the app shell), schema v4 |
-| 5 | Report builders on `ClientWorkspace`, client-side PDF, confidentiality filtering, `AiProvider` interface (disabled by default) |
+| 5 ✅ | `src/reports`: pure builders (`ClientWorkspace` → `ReportDoc`), shared HTML preview and pdfmake renderer (lazy-loaded, Lato WOFF embedded), versioned frozen `ReportRecord`s with client-release approval; `src/ai/aiProvider.ts` (disabled), schema v5 |
 | 6 | Restore with preview, admin configuration, service worker, accessibility/performance QA |
 
 ## Future production (Azure) — outline

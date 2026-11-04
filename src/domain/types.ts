@@ -315,6 +315,11 @@ export interface ActionItem extends BaseRecord, ClientScoped, RaciFields {
   completionNotes: string;
   completedAt: ISODate | null;
   confidentiality: Confidentiality;
+  /**
+   * For client-facing reports: whether the owner has confirmed this commitment or it is still a
+   * proposed request (Part 12.3). Defaults to proposed.
+   */
+  commitment: 'proposed' | 'confirmed';
 }
 
 export type DecisionStatus = 'proposed' | 'under_review' | 'approved' | 'deferred' | 'rejected' | 'superseded';
@@ -369,6 +374,7 @@ export interface Milestone extends BaseRecord, ClientScoped {
   initiativeId: ID | null;
   workstreamId: ID | null;
   status: 'upcoming' | 'complete' | 'missed' | 'cancelled';
+  confidentiality: Confidentiality;
 }
 
 /* ───────────────────────── Restart checklists ───────────────────────── */
@@ -527,6 +533,40 @@ export interface Meeting extends BaseRecord, ClientScoped {
 
 export type ReportKind = 'internal_team' | 'accountability_brief' | 'client_alignment' | 'portfolio_readiness';
 
+/** Structured report content rendered identically to the on-screen preview and to PDF. */
+export type ReportBlock =
+  | { type: 'paragraph'; text: string; muted?: boolean }
+  | { type: 'kv'; items: [string, string][] }
+  | { type: 'stats'; items: [string, string][] }
+  | { type: 'list'; items: string[] }
+  | { type: 'table'; columns: { header: string; width?: number | 'auto' | '*'; align?: 'left' | 'right' | 'center' }[]; rows: string[][]; empty?: string }
+  | { type: 'callout'; text: string; tone: 'info' | 'caution' };
+
+export interface ReportSection {
+  title: string;
+  blocks: ReportBlock[];
+}
+
+export interface ReportDoc {
+  kind: ReportKind;
+  title: string;
+  subtitle: string;
+  clientName: string;
+  generatedAt: ISODateTime;
+  preparedBy: string;
+  version: number;
+  confidentiality: Confidentiality;
+  sections: ReportSection[];
+  /** Notes about what was deliberately excluded (shown to reviewers, not printed). */
+  reviewNotes: string[];
+}
+
+/**
+ * Lifecycle: internal reports are 'final' when generated. Client-facing reports start as 'draft'
+ * and can only be exported for distribution after explicit approval ('approved').
+ */
+export type ReportStatus = 'final' | 'draft' | 'approved';
+
 export interface ReportRecord extends BaseRecord, ClientScoped {
   kind: ReportKind;
   title: string;
@@ -535,6 +575,11 @@ export interface ReportRecord extends BaseRecord, ClientScoped {
   confidentiality: Confidentiality;
   generatedAt: ISODateTime;
   parameters: Record<string, unknown>;
+  status: ReportStatus;
+  /** Frozen content: what was previewed is exactly what is exported. */
+  content: ReportDoc;
+  approval: { approvedBy: string; approvedAt: ISODateTime; checks: string[] } | null;
+  exports: { at: ISODateTime; draft: boolean }[];
 }
 
 export interface ActivityEntry {

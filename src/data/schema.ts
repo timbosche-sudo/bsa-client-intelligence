@@ -3,7 +3,7 @@ import type { Dataset } from '@/domain/types';
 import { hospitalRestartTemplate } from '@/domain/checklistTemplates';
 
 /** Bump when the persisted Dataset shape changes, and add a migration below. */
-export const SCHEMA_VERSION = 4;
+export const SCHEMA_VERSION = 5;
 
 /**
  * Structural envelope validation. Deep per-record validation is added with the editing forms
@@ -85,6 +85,14 @@ const migrations: Record<number, Migration> = {
       amendments: [],
       ...m,
     })),
+  }),
+  // v4 → v5: reporting (Stage 5) — client commitment flag, milestone classification, report records.
+  4: (d) => ({
+    ...d,
+    actions: (d.actions as Record<string, unknown>[]).map((a) => ({ commitment: 'proposed', ...a })),
+    milestones: (d.milestones as Record<string, unknown>[]).map((m) => ({ confidentiality: 'internal', ...m })),
+    // Report records before v5 had no stored content; they cannot be re-exported and are dropped.
+    reports: (d.reports as Record<string, unknown>[]).filter((r) => r.content),
   }),
 };
 

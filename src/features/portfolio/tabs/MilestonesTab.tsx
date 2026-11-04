@@ -6,7 +6,7 @@ import { Sheet } from '@/components/ui/Sheet';
 import { DateField, SelectField, TextField, Toggle } from '@/components/form/fields';
 import { blankMilestone, deleteMilestone, upsertMilestone } from '@/data/mutations';
 import type { ClientWorkspace } from '@/data/repository';
-import type { Milestone, Project } from '@/domain/types';
+import { CONFIDENTIALITY_LABELS, type Milestone, type Project } from '@/domain/types';
 import { formatDate, TBC } from '@/lib/format';
 import { run } from '@/state/actions';
 import { Section } from './shared';
@@ -90,6 +90,13 @@ export function MilestoneSheet({ ws, milestone, onClose }: { ws: ClientWorkspace
         <TextField label="Timing note" value={m.timingNote} onChange={(v) => setM({ ...m, timingNote: v })} placeholder="e.g. Q2 2027 — anticipated" />
         <SelectField label="Status" value={m.status} onChange={(v) => setM({ ...m, status: v as Milestone['status'] })} options={Object.entries(STATUS).map(([value, label]) => ({ value, label }))} />
         <Toggle label="Confirmed" description="Only confirm dates agreed with the client or leadership." checked={m.confirmed} onChange={(v) => setM({ ...m, confirmed: v })} />
+        <SelectField
+          label="Confidentiality"
+          value={m.confidentiality}
+          onChange={(v) => setM({ ...m, confidentiality: v as Milestone['confidentiality'] })}
+          options={Object.entries(CONFIDENTIALITY_LABELS).map(([value, label]) => ({ value, label }))}
+          hint="Only “Approved for Client Release” milestones appear in client-facing reports."
+        />
       </div>
     </Sheet>
   );

@@ -141,6 +141,7 @@ export function blankAction(clientId: ID, defaults: Partial<ActionItem> = {}): A
     completionNotes: '',
     completedAt: null,
     confidentiality: 'internal',
+    commitment: 'proposed',
     ...defaults,
   };
 }

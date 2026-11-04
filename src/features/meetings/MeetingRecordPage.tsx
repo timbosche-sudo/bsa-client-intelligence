@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { AlertCircle, CalendarPlus, Check, ChevronLeft, ClipboardPlus, FilePen, Flag, Gavel, Lock, Minus, Pencil, Play, ShieldCheck } from 'lucide-react';
+import { AlertCircle, CalendarPlus, Check, ChevronLeft, ClipboardPlus, FilePen, FileText, Flag, Gavel, Lock, Minus, Pencil, Play, ShieldCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Dialog } from '@/components/ui/Dialog';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { StageNotice } from '@/components/ui/StageNotice';
 import { FieldError, ListField, TextArea, TextField } from '@/components/form/fields';
 import { PersonAvatar } from '@/components/PersonAvatar';
 import { finalizeMeeting, setAgendaItemStatus, setMeetingNotes, startAmendment, startMeeting, updateCloseout } from '@/data/meetingMutations';
@@ -372,7 +371,9 @@ function FinalRecord({ ws, m }: { ws: ClientWorkspace; m: Meeting }) {
         </p>
         <Button icon={<FilePen size={16} />} onClick={() => setAmending(true)}>Amend record</Button>
       </Card>
-      <StageNotice stage={5}>Internal Client Team Report PDF generated from this record.</StageNotice>
+      <Link to={`/c/${ws.client.id}/reports?new=internal_team&meeting=${m.id}`} className="inline-flex h-11 items-center gap-2 self-start rounded-lg border border-line bg-surface-2 px-4 text-sm font-bold hover:border-line-strong">
+        <FileText size={16} aria-hidden /> Generate Internal Client Team Report
+      </Link>
 
       {rec.summary && (
         <Block title="Summary"><p className="whitespace-pre-wrap p-4 text-sm sm:p-5">{rec.summary}</p></Block>

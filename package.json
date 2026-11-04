@@ -1,7 +1,7 @@
 {
   "name": "bsa-client-intelligence",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0",
   "type": "module",
   "description": "BSA Client Intelligence — strategic client leadership and portfolio management platform (Prototype Mode).",
   "scripts": {
@@ -18,6 +18,7 @@
     "clsx": "^2.1.1",
     "fflate": "^0.8.3",
     "lucide-react": "^1.67.0",
+    "pdfmake": "^0.2.23",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "react-router-dom": "^7.18.5",
@@ -29,6 +30,7 @@
     "@testing-library/dom": "^10.4.2",
     "@testing-library/react": "^16.3.3",
     "@types/node": "^22.20.5",
+    "@types/pdfmake": "^0.2.13",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^4.7.0",

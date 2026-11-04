@@ -62,6 +62,13 @@ export function ActionSheet({ ws, actionId, defaults, onClose }: ActionSheetProp
           <SelectField label="Priority" value={a.priority} onChange={(v) => set({ priority: v as Priority })} options={Object.entries(PRIORITY_LABELS).map(([value, label]) => ({ value, label }))} />
           <DateField label="Due date" value={a.dueDate} onChange={(v) => set({ dueDate: v })} />
           <SelectField label="Confidentiality" value={a.confidentiality} onChange={(v) => set({ confidentiality: v as ActionItem['confidentiality'] })} options={o.confidentialityOptions} />
+          <SelectField
+            label="Commitment"
+            value={a.commitment}
+            onChange={(v) => set({ commitment: v as ActionItem['commitment'] })}
+            options={[{ value: 'proposed', label: 'Proposed request' }, { value: 'confirmed', label: 'Confirmed commitment' }]}
+            hint="For client-owned items: mark Confirmed only once the responsible person has agreed."
+          />
           {a.status === 'complete' && (
             <>
               <DateField label="Date completed" value={a.completedAt} onChange={(v) => set({ completedAt: v })} hint="Defaults to today when left blank." />

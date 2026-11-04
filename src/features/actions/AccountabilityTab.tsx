@@ -1,10 +1,9 @@
 import { Link } from 'react-router-dom';
-import { AlertCircle, ChevronLeft, ChevronRight, ListChecks } from 'lucide-react';
+import { AlertCircle, ChevronLeft, ChevronRight, FileText, ListChecks } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { StageNotice } from '@/components/ui/StageNotice';
 import { PersonAvatar } from '@/components/PersonAvatar';
 import { InitiativeStatusBadge } from '@/components/status';
 import { commitmentsFor, commitmentSummary, workstreamSummary } from '@/data/accountability';
@@ -163,7 +162,9 @@ function PersonView({ ws, personId, onPerson, onOpen }: { ws: ClientWorkspace; p
         </dl>
       </Card>
 
-      <StageNotice stage={5}>A printable Individual Accountability Brief (PDF) generated from this view.</StageNotice>
+      <Link to={`/c/${ws.client.id}/reports?new=accountability_brief&person=${p.id}`} className="inline-flex h-11 items-center gap-2 self-start rounded-lg border border-line bg-surface-2 px-4 text-sm font-bold hover:border-line-strong">
+        <FileText size={16} aria-hidden /> Generate accountability brief (PDF)
+      </Link>
 
       <Section title="Accountable for — open actions">
         <ActionList ws={ws} actions={c.actions.accountable} onOpen={openAction} empty="No open actions owned" />

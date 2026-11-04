@@ -436,6 +436,7 @@ const action = (n: number, title: string, workstreamId: string, initiativeId: st
   completionNotes: '',
   completedAt: null,
   confidentiality: 'internal',
+  commitment: 'proposed',
   consultedIds: [],
   informedIds: [],
 });
@@ -520,6 +521,7 @@ const milestones: Milestone[] = [
     initiativeId: null,
     workstreamId: 'ws_hm_1',
     status: 'upcoming',
+    confidentiality: 'internal',
   },
   {
     ...base('milestone_hm_2'),
@@ -532,6 +534,7 @@ const milestones: Milestone[] = [
     initiativeId: 'init_hm_2',
     workstreamId: 'ws_hm_2',
     status: 'upcoming',
+    confidentiality: 'internal',
   },
 ];
 

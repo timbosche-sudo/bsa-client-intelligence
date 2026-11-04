@@ -329,7 +329,7 @@ export function deleteProject(d: Dataset, projectId: ID): ID[] {
 
 export function blankMilestone(clientId: ID, projectId: ID | null): Milestone {
   const ts = nowIso();
-  return { id: newId('milestone'), createdAt: ts, updatedAt: ts, archivedAt: null, clientId, title: '', date: null, timingNote: '', confirmed: false, projectId, initiativeId: null, workstreamId: null, status: 'upcoming' };
+  return { id: newId('milestone'), createdAt: ts, updatedAt: ts, archivedAt: null, clientId, title: '', date: null, timingNote: '', confirmed: false, projectId, initiativeId: null, workstreamId: null, status: 'upcoming', confidentiality: 'internal' };
 }
 
 export function upsertMilestone(d: Dataset, m: Milestone): void {

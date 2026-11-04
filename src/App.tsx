@@ -15,7 +15,8 @@ import { MeetingsPage } from '@/features/meetings/MeetingsPage';
 import { MeetingRecordPage } from '@/features/meetings/MeetingRecordPage';
 import { MeetingModePage } from '@/features/meetings/MeetingModePage';
 import { ActionsDecisionsPage } from '@/features/actions/ActionsDecisionsPage';
-import { ReportsPage } from '@/features/reports/ReportsPage';
+import { ReportsPage } from '@/reports/ReportsPage';
+import { ReportViewerPage } from '@/reports/ReportViewerPage';
 import { AdminPage } from '@/features/admin/AdminPage';
 import { Button } from '@/components/ui/Button';
 import { Toaster } from '@/components/ui/Toaster';
@@ -73,6 +74,7 @@ const router = createHashRouter([
       { path: 'meetings/:meetingId', element: <MeetingRecordPage /> },
       { path: 'actions', element: <ActionsDecisionsPage /> },
       { path: 'reports', element: <ReportsPage /> },
+      { path: 'reports/:reportId', element: <ReportViewerPage /> },
       { path: 'admin', element: <AdminPage /> },
       { path: '*', element: <Navigate to="overview" replace /> },
     ],
