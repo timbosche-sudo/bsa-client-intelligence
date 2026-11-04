@@ -1,17 +1,18 @@
 import { useState } from 'react';
-import { BookmarkPlus } from 'lucide-react';
+import { BookmarkPlus, ChevronRight, FilePlus2, LayoutTemplate } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Sheet } from '@/components/ui/Sheet';
 import { FormSection, ListField, SelectField, TextField } from '@/components/form/fields';
 import { PeoplePicker } from '@/components/form/PeoplePicker';
-import { blankMeeting, cancelMeeting, cloneAgenda, deleteMeeting, findMeetingReferences, templateFromMeeting, upsertMeeting, upsertMeetingTemplate, validateMeeting } from '@/data/meetingMutations';
+import { blankMeeting, cancelMeeting, cloneAgenda, deleteMeeting, templateFromMeeting, upsertMeeting, upsertMeetingTemplate, validateMeeting } from '@/data/meetingMutations';
 import { active, type ClientWorkspace } from '@/data/repository';
 import type { Meeting } from '@/domain/types';
 import { run } from '@/state/actions';
-import { useDataStore } from '@/state/store';
 import { useStrategyOptions, withCurrent } from '@/features/strategy/options';
 import { SheetFooter } from '@/features/strategy/SheetFooter';
 import { AgendaEditor } from './AgendaEditor';
+import { agendaMinutes } from '@/data/meetingSelectors';
+import type { MeetingTemplate } from '@/domain/types';
 
 /** Splits an ISO timestamp into local date and time inputs, and back. */
 export function toLocalParts(iso: string | null): { date: string; time: string } {
@@ -26,12 +27,20 @@ export function fromLocalParts(date: string, time: string): string | null {
   return Number.isNaN(d.getTime()) ? null : d.toISOString();
 }
 
-export function MeetingEditorSheet({ ws, meetingId, templateId, seed, onClose, onSaved }: { ws: ClientWorkspace; meetingId: string | null; templateId?: string | null; seed?: Partial<Meeting>; onClose(): void; onSaved?(id: string): void }) {
-  const data = useDataStore((s) => s.data)!;
+/**
+ * Create or edit a meeting. A new meeting first asks whether to start from a template or a blank agenda,
+ * unless the caller already chose (`templateId` set to a template id, or 'none' for blank).
+ */
+export function MeetingEditorSheet({ ws, meetingId, templateId, suggestedTemplateId, seed, onClose, onSaved }: { ws: ClientWorkspace; meetingId: string | null; templateId?: string | null; suggestedTemplateId?: string | null; seed?: Partial<Meeting>; onClose(): void; onSaved?(id: string): void }) {
   const existing = meetingId ? ws.meetings.find((m) => m.id === meetingId) ?? null : null;
   const templates = active(ws.meetingTemplates);
-  const initialTemplate = templateId === 'none' ? null : templates.find((t) => t.id === templateId) ?? (existing ? null : templates[0] ?? null);
-  const [m, setM] = useState<Meeting>(() => structuredClone(existing ?? { ...blankMeeting(ws.client.id, initialTemplate), ...seed }));
+  const initialTemplate = templateId && templateId !== 'none' ? templates.find((t) => t.id === templateId) ?? null : null;
+  const fromTemplate = (t: MeetingTemplate | null): Meeting => {
+    const base = blankMeeting(ws.client.id, t);
+    return { ...base, ...seed, objectives: seed?.objectives?.length ? seed.objectives : base.objectives, title: seed?.title || base.title };
+  };
+  const [m, setM] = useState<Meeting>(() => structuredClone(existing ?? fromTemplate(initialTemplate)));
+  const [choosing, setChoosing] = useState(!existing && !templateId && templates.length > 0);
   const [parts, setParts] = useState(() => toLocalParts(m.startsAt));
   const [error, setError] = useState('');
   const [dirty, setDirty] = useState(false);
@@ -57,6 +66,46 @@ export function MeetingEditorSheet({ ws, meetingId, templateId, seed, onClose, o
       onClose();
     } else setError(r.error ?? '');
   };
+
+  if (choosing) {
+    const pick = (t: MeetingTemplate | null) => (setM(structuredClone(fromTemplate(t))), setChoosing(false));
+    return (
+      <Sheet open onClose={onClose} width="lg" title="New meeting" description="How would you like to build the agenda? You can edit every topic and duration afterwards." footer={<Button variant="ghost" onClick={onClose}>Cancel</Button>}>
+        <div className="flex flex-col gap-6">
+          <section>
+            <h3 className="eyebrow mb-3 flex items-center gap-1.5 text-ink"><LayoutTemplate size={13} aria-hidden /> Use a template</h3>
+            <ul className="flex flex-col gap-2">
+              {templates.map((t) => (
+                <li key={t.id}>
+                  <button type="button" onClick={() => pick(t)} className="flex w-full items-start gap-3 rounded-xl border border-line bg-surface p-4 text-left transition-colors hover:border-line-strong hover:bg-surface-2">
+                    <span className="min-w-0 flex-1">
+                      <span className="flex flex-wrap items-center gap-2 font-bold">
+                        {t.name}
+                        {t.id === suggestedTemplateId && <span className="rounded-full bg-surface-3 px-2 py-0.5 text-[11px] font-medium text-muted">Used last time</span>}
+                      </span>
+                      <span className="mt-0.5 block text-xs text-subtle">{t.agenda.length} topics · {agendaMinutes(t.agenda)} min</span>
+                      <span className="mt-2 block text-sm text-muted">{t.agenda.map((a) => a.title).join(' · ')}</span>
+                    </span>
+                    <ChevronRight size={18} className="mt-0.5 shrink-0 text-subtle" aria-hidden />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+          <section>
+            <h3 className="eyebrow mb-3 flex items-center gap-1.5 text-ink"><FilePlus2 size={13} aria-hidden /> Or start from scratch</h3>
+            <button type="button" onClick={() => pick(null)} className="flex w-full items-center gap-3 rounded-xl border border-dashed border-line-strong p-4 text-left transition-colors hover:bg-surface-2">
+              <span className="min-w-0 flex-1">
+                <span className="block font-bold">Blank agenda</span>
+                <span className="mt-0.5 block text-sm text-muted">Add your own topics and durations.</span>
+              </span>
+              <ChevronRight size={18} className="shrink-0 text-subtle" aria-hidden />
+            </button>
+          </section>
+        </div>
+      </Sheet>
+    );
+  }
 
   return (
     <Sheet
@@ -88,11 +137,14 @@ export function MeetingEditorSheet({ ws, meetingId, templateId, seed, onClose, o
                   }
                 : undefined
             }
-            onDelete={() => {
-              const r = run((d) => deleteMeeting(d, m.id), { clientId: ws.client.id, entity: 'meeting', entityId: m.id, summary: `Deleted meeting "${m.title}"` });
-              if (r.ok) onClose();
-            }}
-            deleteBlockers={existing ? findMeetingReferences(data, existing.id) : []}
+            onDelete={
+              existing?.status === 'scheduled'
+                ? () => {
+                    const r = run((d) => deleteMeeting(d, m.id), { clientId: ws.client.id, entity: 'meeting', entityId: null, summary: `Deleted meeting "${m.title}"` });
+                    if (r.ok) onClose();
+                  }
+                : undefined
+            }
           />
         )
       }

@@ -7,6 +7,7 @@ import {
   blankMeeting,
   cancelMeeting,
   deleteMeeting,
+  meetingDeletionImpact,
   endMeeting,
   finalizeMeeting,
   goToAgendaItem,
@@ -100,7 +101,6 @@ describe('facilitation lifecycle', () => {
     expect(() => upsertMeeting(d, { ...f, title: 'Changed' })).toThrow(/amendment/);
     expect(() => deleteAction(d, actionId)).toThrow(/meeting/);
     expect(() => deleteRisk(d, f.record!.issues[0].id)).toThrow(/meeting/);
-    expect(() => deleteMeeting(d, m.id)).toThrow(IntegrityError);
     expect(() => cancelMeeting(d, m.id)).toThrow(IntegrityError);
   });
 
@@ -120,10 +120,47 @@ describe('facilitation lifecycle', () => {
     expect(f.amendments[0].completedAt).not.toBeNull();
   });
 
-  it('allows deleting only never-held meetings without captures', () => {
+  it('deletes a never-held meeting', () => {
     const { d, m } = kickoff();
     deleteMeeting(d, m.id);
     expect(d.meetings).toHaveLength(0);
+  });
+
+  const heldWithCaptures = () => {
+    const { d, m } = kickoff();
+    startMeeting(d, m.id);
+    upsertAction(d, { ...blankAction(HM), id: 'a_mock', title: 'Mock action', meetingId: m.id });
+    upsertDecision(d, { ...blankDecision(HM), id: 'dec_mock', title: 'Mock decision', meetingId: m.id });
+    upsertRisk(d, { ...blankRisk(HM), id: 'risk_mock', title: 'Mock issue', kind: 'issue', meetingId: m.id });
+    endMeeting(d, m.id);
+    finalizeMeeting(d, m.id, { approvedBy: 'Craig Puccetti', acknowledged: true });
+    const approved = d.decisions.find((x) => x.id === 'dec_mock')!;
+    Object.assign(approved, { status: 'approved', approval: { approvedById: CRAIG, approvedAt: '2026-11-10T16:00:00.000Z', note: '' } });
+    upsertDecision(d, { ...blankDecision(HM), id: 'dec_mock2', title: 'Mock proposal', meetingId: m.id });
+    const later = { ...blankMeeting(HM), title: 'Later', carryoverActionIds: ['a_mock'] };
+    d.meetings.push(later);
+    return { d, m };
+  };
+
+  it('deletes a finalized meeting and, on request, the items captured in it', () => {
+    const { d, m } = heldWithCaptures();
+    expect(meetingDeletionImpact(d, m.id)).toMatchObject({ held: true, finalized: true, actions: 1, decisions: 2, approvedDecisions: 1, issues: 1 });
+    deleteMeeting(d, m.id, { removeCaptured: true });
+    expect(d.meetings.map((x) => x.title)).toEqual(['Later']);
+    expect(d.meetings[0].carryoverActionIds).toEqual([]);
+    expect(d.actions.some((a) => a.id === 'a_mock')).toBe(false);
+    expect(d.risks.some((r) => r.id === 'risk_mock')).toBe(false);
+    expect(d.decisions.some((x) => x.id === 'dec_mock2')).toBe(false);
+    // Approved decisions are never deleted: kept, unlinked and archived.
+    expect(d.decisions.find((x) => x.id === 'dec_mock')).toMatchObject({ meetingId: null, archivedAt: expect.any(String) });
+  });
+
+  it('can delete a held meeting but keep its captured items, unlinked', () => {
+    const { d, m } = heldWithCaptures();
+    deleteMeeting(d, m.id, { removeCaptured: false });
+    expect(d.actions.find((a) => a.id === 'a_mock')!.meetingId).toBeNull();
+    expect(d.risks.find((r) => r.id === 'risk_mock')!.meetingId).toBeNull();
+    expect(d.decisions.filter((x) => x.id.startsWith('dec_mock')).every((x) => x.meetingId === null && !x.archivedAt)).toBe(true);
   });
 });
 

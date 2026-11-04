@@ -164,7 +164,7 @@ export function MeetingsPage() {
           <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm text-muted">Cancelled meetings ({cancelled.length})</summary>
           <ul className="mt-2 flex flex-col gap-1 text-sm">
             {cancelled.map((m) => (
-              <li key={m.id}><button type="button" onClick={() => setEditor({ id: m.id, key: Date.now() })} className="min-h-11 text-left text-subtle hover:text-ink">{m.title} · {formatDateTime(meetingTime(m))}</button></li>
+              <li key={m.id}><Link to={`/c/${ws.client.id}/meetings/${m.id}`} className="inline-flex min-h-11 items-center text-left text-subtle hover:text-ink">{m.title} · {formatDateTime(meetingTime(m))}</Link></li>
             ))}
           </ul>
         </details>

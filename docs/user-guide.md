@@ -16,7 +16,9 @@ Your data stays in this browser on this device. Export a backup regularly (see *
 3. **Portfolio:** cards or table, with filters by category, studio and readiness. Open a project for leadership, scope and readiness, milestones, risks and decisions, actions, images and history. Use *Export CSV* for the filtered list.
 4. **Workstreams & initiatives:** strategic topics with champions and a lightweight RACI.
 5. **Actions & decisions:** track owners, due dates and status. *Accountability* shows everything one person owns.
-6. **Meetings:** plan from a template, *Start meeting* to facilitate, *End meeting* to close out, then *Finalize*. Finalized records only change through a recorded amendment.
+6. **Meetings:** *New meeting* asks whether to start from a template or a blank agenda. *Start meeting* to facilitate; the **Attendees** tab lets you add people as they join (or add the whole Client Team). *End meeting* to close out, then *Finalize*. Finalized records only change through a recorded amendment.
+   - **Email notes:** on a finalized meeting, *Email notes to attendees* drafts the notes in your own email app (or copies them). If every recipient is BSA, the full internal record is included; if anyone is a client or external contact, only decisions and actions marked *Approved for Client Release* are included.
+   - **Delete:** *Delete* on any meeting page removes it permanently, including practice runs. You choose whether the actions, decisions and issues captured in it are deleted too or kept; approved decisions are always kept (archived).
 7. **Reports:** generate, preview, then export a PDF. Client Alignment reports include **only** records marked *Approved for Client Release*, and stay watermarked drafts until release approval.
 
 ## Confidentiality

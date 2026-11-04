@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Check, ChevronLeft, ChevronRight, CircleDot, ClipboardPlus, Flag, Gavel, ListChecks, LogOut, Minus, Square, Target, Timer, Users } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { PersonAvatar } from '@/components/PersonAvatar';
 import { InitiativeStatusBadge } from '@/components/status';
-import { endMeeting, goToAgendaItem, setAgendaItemStatus, setMeetingNotes, startMeeting } from '@/data/meetingMutations';
+import { endMeeting, goToAgendaItem, setAgendaItemStatus, setMeetingAttendees, setMeetingNotes, startMeeting } from '@/data/meetingMutations';
+import { PeoplePicker } from '@/components/form/PeoplePicker';
+import { useStrategyOptions } from '@/features/strategy/options';
 import { agendaMinutes, carryover, meetingCaptures, meetingProgress } from '@/data/meetingSelectors';
 import { active, pendingDecisions, type ClientWorkspace } from '@/data/repository';
 import { OPEN_ACTION_STATUSES } from '@/domain/labels';
@@ -320,7 +320,7 @@ function NotesBox({ label, value, onSave, rows }: { label: string; value: string
   );
 }
 
-type ContextTab = 'captured' | 'actions' | 'decisions' | 'context';
+type ContextTab = 'captured' | 'attendees' | 'actions' | 'decisions' | 'context';
 
 function ContextPanel({ ws, m, onOpen }: { ws: ClientWorkspace; m: Meeting; onOpen: ReturnType<typeof useRecordSheet>['open'] }) {
   const [tab, setTab] = useState<ContextTab>('captured');
@@ -332,6 +332,7 @@ function ContextPanel({ ws, m, onOpen }: { ws: ClientWorkspace; m: Meeting; onOp
 
   const tabs: { id: ContextTab; label: string; n?: number }[] = [
     { id: 'captured', label: 'Captured', n: capturedCount },
+    { id: 'attendees', label: 'Attendees', n: m.attendeeIds.length },
     { id: 'actions', label: 'Actions', n: carried.length },
     { id: 'decisions', label: 'Decisions', n: decisions.length },
     { id: 'context', label: 'Context' },
@@ -371,6 +372,7 @@ function ContextPanel({ ws, m, onOpen }: { ws: ClientWorkspace; m: Meeting; onOp
           <DecisionList ws={ws} decisions={decisions} onOpen={(id) => onOpen({ kind: 'decision', id })} empty="No pending decisions" />
         </div>
       )}
+      {tab === 'attendees' && <AttendeesPanel ws={ws} m={m} />}
       {tab === 'context' && (
         <div className="flex flex-col gap-5 p-4 sm:p-5">
           {m.objectives.length > 0 && (
@@ -379,25 +381,6 @@ function ContextPanel({ ws, m, onOpen }: { ws: ClientWorkspace; m: Meeting; onOp
               <ul className="flex flex-col gap-1.5 text-sm">{m.objectives.map((o, i) => <li key={i} className="flex gap-2"><span className="mt-2 size-1 shrink-0 rounded-full bg-ink" aria-hidden />{o}</li>)}</ul>
             </section>
           )}
-          <section>
-            <p className="eyebrow mb-2 flex items-center gap-1.5 text-ink"><Users size={13} aria-hidden /> Attendees</p>
-            {m.attendeeIds.length === 0 ? (
-              <p className="text-sm text-subtle">No attendees recorded.</p>
-            ) : (
-              <ul className="flex flex-col gap-2">
-                {m.attendeeIds.map((id) => {
-                  const p = ws.people.find((x) => x.id === id);
-                  return (
-                    <li key={id} className="flex items-center gap-2.5 text-sm">
-                      <PersonAvatar person={p} size="sm" />
-                      <span className="flex-1">{p?.fullName ?? 'Unknown'}</span>
-                      {id === m.facilitatorId && <Badge tone="outline">Facilitator</Badge>}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </section>
           <section>
             <p className="eyebrow mb-2 flex items-center gap-1.5 text-ink"><Target size={13} aria-hidden /> Related initiatives</p>
             {initiatives.length === 0 ? (
@@ -419,6 +402,25 @@ function ContextPanel({ ws, m, onOpen }: { ws: ClientWorkspace; m: Meeting; onOp
         </div>
       )}
     </aside>
+  );
+}
+
+/** Who is in the room. Editable while the meeting runs; saved immediately and included in the record. */
+function AttendeesPanel({ ws, m }: { ws: ClientWorkspace; m: Meeting }) {
+  const o = useStrategyOptions(ws);
+  const team = [...new Set(active(ws.memberships).map((x) => x.personId))].filter((id) => o.people.some((p) => p.id === id && p.active && !p.archivedAt));
+  const missingTeam = team.filter((id) => !m.attendeeIds.includes(id));
+  const save = (ids: string[]) => run((d) => setMeetingAttendees(d, m.id, ids), { clientId: ws.client.id, entity: 'meeting', entityId: m.id, summary: `Updated attendees of "${m.title}"` }, false);
+  return (
+    <div className="flex flex-col gap-4 p-4 sm:p-5">
+      <PeoplePicker label="Attendees" hint="Anyone in this workspace. Add new people under Leadership → People." people={o.people} value={m.attendeeIds} onChange={save} />
+      {missingTeam.length > 0 && (
+        <Button size="sm" icon={<Users size={15} />} className="self-start" onClick={() => save([...m.attendeeIds, ...missingTeam])}>
+          Add all Client Team members ({missingTeam.length})
+        </Button>
+      )}
+      {m.facilitatorId && <p className="text-xs text-subtle">Facilitator: {ws.people.find((p) => p.id === m.facilitatorId)?.fullName ?? 'Unknown'}</p>}
+    </div>
   );
 }
 

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { AlertCircle, CalendarPlus, Check, ChevronLeft, ClipboardPlus, FilePen, FileText, Flag, Gavel, Lock, Minus, Pencil, Play, ShieldCheck } from 'lucide-react';
+import { AlertCircle, CalendarPlus, Check, ChevronLeft, ClipboardPlus, FilePen, FileText, Flag, Gavel, Lock, Minus, Pencil, Play, Mail, ShieldCheck, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -19,6 +19,8 @@ import { currentUserName, run } from '@/state/actions';
 import { useRequiredWorkspace } from '@/state/useWorkspace';
 import { ActionList, DecisionList, RiskList } from '@/features/strategy/RecordRows';
 import { useRecordSheet } from '@/features/strategy/useRecordSheet';
+import { DeleteMeetingDialog } from './DeleteMeetingDialog';
+import { EmailNotesDialog } from './EmailNotesDialog';
 import { MeetingEditorSheet } from './MeetingEditorSheet';
 import { MEETING_STATUS } from './MeetingsPage';
 
@@ -28,6 +30,7 @@ export function MeetingRecordPage() {
   const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [followUp, setFollowUp] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const m = ws.meetings.find((x) => x.id === meetingId);
   if (!m) {
     return (
@@ -66,17 +69,19 @@ export function MeetingRecordPage() {
           {m.status === 'closeout' && <Button icon={<Play size={16} />} onClick={runMode}>Resume facilitation</Button>}
           {m.status === 'finalized' && <Button variant="primary" icon={<CalendarPlus size={16} />} onClick={() => setFollowUp(true)}>Schedule next meeting</Button>}
           {m.status !== 'finalized' && m.status !== 'cancelled' && <Button icon={<Pencil size={16} />} onClick={() => setEditing(true)}>Edit details</Button>}
+          <Button variant="ghost" icon={<Trash2 size={16} />} onClick={() => setDeleting(true)}>Delete</Button>
         </div>
       </header>
 
       {m.status === 'finalized' ? <FinalRecord ws={ws} m={m} /> : m.status === 'closeout' ? <Closeout ws={ws} m={m} /> : <Preparation ws={ws} m={m} />}
 
       {editing && <MeetingEditorSheet ws={ws} meetingId={m.id} onClose={() => setEditing(false)} />}
+      {deleting && <DeleteMeetingDialog ws={ws} m={m} open onClose={() => setDeleting(false)} onDeleted={() => navigate(`/c/${ws.client.id}/meetings`)} />}
       {followUp && (
         <MeetingEditorSheet
           ws={ws}
           meetingId={null}
-          templateId={m.templateId}
+          suggestedTemplateId={m.templateId}
           seed={{ title: '', objectives: m.nextMeetingTopics, attendeeIds: m.attendeeIds, facilitatorId: m.facilitatorId, workstreamIds: m.workstreamIds, location: m.location }}
           onClose={() => setFollowUp(false)}
           onSaved={(id) => navigate(`/c/${ws.client.id}/meetings/${id}`)}
@@ -361,6 +366,7 @@ function FinalizePanel({ ws, m, warnings }: { ws: ClientWorkspace; m: Meeting; w
 function FinalRecord({ ws, m }: { ws: ClientWorkspace; m: Meeting }) {
   const rec = m.record!;
   const [amending, setAmending] = useState(false);
+  const [emailing, setEmailing] = useState(false);
   const live = (id: string) => ws.actions.find((a) => a.id === id);
   return (
     <div className="flex flex-col gap-6">
@@ -371,9 +377,13 @@ function FinalRecord({ ws, m }: { ws: ClientWorkspace; m: Meeting }) {
         </p>
         <Button icon={<FilePen size={16} />} onClick={() => setAmending(true)}>Amend record</Button>
       </Card>
-      <Link to={`/c/${ws.client.id}/reports?new=internal_team&meeting=${m.id}`} className="inline-flex h-11 items-center gap-2 self-start rounded-lg border border-line bg-surface-2 px-4 text-sm font-bold hover:border-line-strong">
-        <FileText size={16} aria-hidden /> Generate Internal Client Team Report
-      </Link>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="primary" icon={<Mail size={16} />} onClick={() => setEmailing(true)}>Email notes to attendees</Button>
+        <Link to={`/c/${ws.client.id}/reports?new=internal_team&meeting=${m.id}`} className="inline-flex h-11 items-center gap-2 rounded-lg border border-line bg-surface-2 px-4 text-sm font-bold hover:border-line-strong">
+          <FileText size={16} aria-hidden /> Generate Internal Client Team Report
+        </Link>
+      </div>
+      {emailing && <EmailNotesDialog ws={ws} m={m} onClose={() => setEmailing(false)} />}
 
       {rec.summary && (
         <Block title="Summary"><p className="whitespace-pre-wrap p-4 text-sm sm:p-5">{rec.summary}</p></Block>

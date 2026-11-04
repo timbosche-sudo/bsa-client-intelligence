@@ -142,6 +142,13 @@ export function setMeetingNotes(d: Dataset, id: ID, itemId: ID | null, text: str
   save(d, itemId ? { ...m, notes: { ...m.notes, [itemId]: text } } : { ...m, generalNotes: text });
 }
 
+/** Attendees can be changed until the record is finalized (e.g. someone joins once the meeting has started). */
+export function setMeetingAttendees(d: Dataset, id: ID, attendeeIds: ID[]): void {
+  const m = find(d, id);
+  assertEditable(m);
+  save(d, { ...m, attendeeIds: [...new Set(attendeeIds)] });
+}
+
 export function updateCloseout(d: Dataset, id: ID, patch: Partial<Pick<Meeting, 'summary' | 'nextMeetingTopics'>>): void {
   const m = find(d, id);
   assertEditable(m);
@@ -223,10 +230,63 @@ export function findMeetingReferences(d: Dataset, id: ID): string[] {
   return refs;
 }
 
-/** Only meetings that were never held (and have no captured records) can be deleted. */
-export function deleteMeeting(d: Dataset, id: ID): void {
-  const refs = findMeetingReferences(d, id);
-  if (refs.length) throw new IntegrityError('This meeting has a record or captured items. Cancel it instead.', refs);
+export interface MeetingDeletionImpact {
+  held: boolean;
+  finalized: boolean;
+  actions: number;
+  decisions: number;
+  /** Approved decisions are never deleted (governance rule); they are kept, unlinked and archived. */
+  approvedDecisions: number;
+  issues: number;
+  reports: number;
+}
+
+export function meetingDeletionImpact(d: Dataset, id: ID): MeetingDeletionImpact {
+  const m = find(d, id);
+  const decisions = d.decisions.filter((x) => x.meetingId === id);
+  return {
+    held: m.status !== 'scheduled' && m.status !== 'cancelled',
+    finalized: m.status === 'finalized',
+    actions: d.actions.filter((a) => a.meetingId === id).length,
+    decisions: decisions.length,
+    approvedDecisions: decisions.filter((x) => x.status === 'approved').length,
+    issues: d.risks.filter((r) => r.meetingId === id).length,
+    reports: d.reports.filter((r) => r.parameters?.meetingId === id).length,
+  };
+}
+
+/**
+ * Permanently deletes a meeting, including one that was held or finalized (e.g. a practice run).
+ * Captured items are either kept and unlinked, or removed with the meeting (`removeCaptured`).
+ * Approved decisions, and decisions another decision supersedes, are never deleted: they are
+ * kept, unlinked and archived. Generated reports keep their frozen content.
+ */
+export function deleteMeeting(d: Dataset, id: ID, opts: { removeCaptured: boolean } = { removeCaptured: false }): void {
+  find(d, id);
+  const ts = nowIso();
+  const unlink = <T extends { meetingId: ID | null; updatedAt: string }>(x: T) => Object.assign(x, { meetingId: null, updatedAt: ts });
+  if (opts.removeCaptured) {
+    const removedActions = new Set(d.actions.filter((a) => a.meetingId === id).map((a) => a.id));
+    d.actions = d.actions.filter((a) => !removedActions.has(a.id));
+    d.meetings.forEach((m) => {
+      if (m.carryoverActionIds.some((a) => removedActions.has(a))) m.carryoverActionIds = m.carryoverActionIds.filter((a) => !removedActions.has(a));
+    });
+    d.risks = d.risks.filter((r) => r.meetingId !== id);
+    const protectedIds = new Set(d.decisions.map((x) => x.supersededById).filter(Boolean));
+    d.decisions = d.decisions.filter((x) => {
+      if (x.meetingId !== id) return true;
+      if (x.status === 'approved' || protectedIds.has(x.id)) {
+        unlink(x);
+        x.archivedAt = x.archivedAt ?? ts;
+        return true;
+      }
+      return false;
+    });
+  } else {
+    d.actions.filter((a) => a.meetingId === id).forEach(unlink);
+    d.decisions.filter((x) => x.meetingId === id).forEach(unlink);
+    d.risks.filter((r) => r.meetingId === id).forEach(unlink);
+  }
   d.meetings = d.meetings.filter((m) => m.id !== id);
 }
 
