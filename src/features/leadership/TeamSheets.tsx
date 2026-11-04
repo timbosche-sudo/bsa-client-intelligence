@@ -152,12 +152,28 @@ export function SeatSheet({ ws, open, onClose, seatId, presetTierId }: { ws: Cli
   const [seat, setSeat] = useState(() => existing ?? blankSeat(ws.client.id, presetTierId ?? tiers[0]?.id ?? ''));
   const [error, setError] = useState('');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const data = useDataStore((s) => s.data)!;
   const members = ws.memberships.filter((m) => !m.archivedAt);
-  const name = (personId: string) => ws.people.find((p) => p.id === personId)?.fullName ?? 'Unknown';
+  const name = (personId: string) => data.people.find((p) => p.id === personId)?.fullName ?? 'Unknown';
+  // Anyone in this workspace can fill a seat. People not yet on the Client Team are added to the seat's tier on save.
+  const memberPersonIds = new Set(members.map((m) => m.personId));
+  const others = assignablePeople(data, ws.client.id).filter((p) => !memberPersonIds.has(p.id));
+  const [assignee, setAssignee] = useState(existing?.membershipId ? `m:${existing.membershipId}` : '');
+  const [confirmed, setConfirmed] = useState(true);
+  const addsPerson = assignee.startsWith('p:');
 
   const save = () => {
-    if (!seat.role.trim()) return setError('Name this seat, e.g. "Executive Sponsor".');
-    const r = run((d) => upsertSeat(d, { ...seat, role: seat.role.trim() }), { clientId: ws.client.id, entity: 'seat', entityId: seat.id, summary: `${existing ? 'Updated' : 'Added'} leadership seat "${seat.role.trim()}"` });
+    const role = seat.role.trim();
+    if (!role) return setError('Name this seat, e.g. "Executive Sponsor".');
+    const assignedName = assignee ? name(addsPerson ? assignee.slice(2) : members.find((m) => `m:${m.id}` === assignee)?.personId ?? '') : null;
+    const r = run(
+      (d) => {
+        let membershipId: string | null = assignee.startsWith('m:') ? assignee.slice(2) : null;
+        if (addsPerson) membershipId = addMembership(d, { clientId: ws.client.id, personId: assignee.slice(2), tierId: seat.tierId, role, responsibilities: [], confirmed }).id;
+        upsertSeat(d, { ...seat, role, membershipId });
+      },
+      { clientId: ws.client.id, entity: 'seat', entityId: seat.id, summary: `${existing ? 'Updated' : 'Added'} leadership seat "${role}"${assignedName ? ` — ${assignedName}${addsPerson ? ' (added to the Client Team)' : ''}` : ''}` },
+    );
     if (r.ok) onClose();
   };
 
@@ -187,12 +203,18 @@ export function SeatSheet({ ws, open, onClose, seatId, presetTierId }: { ws: Cli
           <SelectField label="Leadership tier" value={seat.tierId} onChange={(v) => setSeat({ ...seat, tierId: v })} options={tiers.map((t) => ({ value: t.id, label: t.label }))} />
           <SelectField
             label="Assigned to"
-            value={seat.membershipId ?? ''}
-            onChange={(v) => setSeat({ ...seat, membershipId: v || null })}
+            value={assignee}
+            onChange={setAssignee}
             placeholder="Unassigned"
-            options={members.map((m) => ({ value: m.id, label: `${name(m.personId)} — ${m.role}` }))}
-            hint="Add people to the Client Team first to assign them here."
+            options={[
+              ...members.map((m) => ({ value: `m:${m.id}`, label: `${name(m.personId)} — ${m.role}` })),
+              ...others.map((p) => ({ value: `p:${p.id}`, label: `${p.fullName}${p.title ? ` — ${p.title}` : ''}` })),
+            ]}
+            hint={others.length || members.length ? 'Choose anyone in this workspace. People not yet on the Client Team are added to this tier in this role.' : 'Add people under People below, then assign them here.'}
           />
+          {addsPerson && (
+            <Toggle label="Confirmed in this role" description="Turn off to show this person as proposed until it is agreed." checked={confirmed} onChange={setConfirmed} />
+          )}
         </div>
       </Sheet>
       <ConfirmDialog
