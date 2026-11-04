@@ -53,3 +53,50 @@ export function updateReadinessDimensions(d: Dataset, clientId: ID, dims: Readin
   }
   client.updatedAt = nowIso();
 }
+
+export interface SampleDataSummary {
+  projects: number;
+  /** Your records that pointed at a sample project; they are kept and only unlinked. */
+  unlinked: number;
+  checklists: number;
+}
+
+/** What `removeSampleData` would change, for the confirmation dialog. */
+export function sampleDataSummary(d: Dataset): SampleDataSummary {
+  const ids = new Set(d.projects.filter((p) => p.isSample).map((p) => p.id));
+  const linked = (id: ID | null) => id != null && ids.has(id);
+  const unlinked =
+    d.actions.filter((x) => linked(x.projectId)).length +
+    d.decisions.filter((x) => linked(x.projectId)).length +
+    d.risks.filter((x) => linked(x.projectId)).length +
+    d.milestones.filter((x) => linked(x.projectId)).length +
+    d.initiatives.filter((x) => x.relatedProjectIds.some((p) => ids.has(p))).length;
+  return { projects: ids.size, unlinked, checklists: (d.checklists ?? []).filter((c) => ids.has(c.projectId)).length };
+}
+
+/**
+ * Removes the fictional sample projects (records flagged `isSample`) from every workspace.
+ * Nothing you entered is deleted: actions, decisions, risks, milestones and initiatives that referenced
+ * a sample project are kept and simply unlinked. Checklists and images belonging to sample projects are
+ * removed with them. Returns the media ids whose stored files should be purged.
+ */
+export function removeSampleData(d: Dataset): ID[] {
+  const ids = new Set(d.projects.filter((p) => p.isSample).map((p) => p.id));
+  if (!ids.size) throw new IntegrityError('There are no sample projects to remove.');
+  const ts = nowIso();
+  const unlink = <T extends { projectId: ID | null; updatedAt: string }>(x: T) => {
+    if (x.projectId != null && ids.has(x.projectId)) Object.assign(x, { projectId: null, updatedAt: ts });
+  };
+  d.actions.forEach(unlink);
+  d.decisions.forEach(unlink);
+  d.risks.forEach(unlink);
+  d.milestones.forEach(unlink);
+  d.initiatives.forEach((i) => {
+    if (i.relatedProjectIds.some((p) => ids.has(p))) Object.assign(i, { relatedProjectIds: i.relatedProjectIds.filter((p) => !ids.has(p)), updatedAt: ts });
+  });
+  d.checklists = (d.checklists ?? []).filter((c) => !ids.has(c.projectId));
+  const media = d.media.filter((m) => m.ownerType === 'project' && ids.has(m.ownerId)).map((m) => m.id);
+  d.media = d.media.filter((m) => !media.includes(m.id));
+  d.projects = d.projects.filter((p) => !ids.has(p.id));
+  return media;
+}

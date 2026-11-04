@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Building2, Database, Download, History, ListChecks, ListOrdered, Pencil, SlidersHorizontal, Plus, RotateCcw, ShieldAlert, Sparkles, Upload } from 'lucide-react';
+import { Building2, Database, Download, Eraser, History, ListChecks, ListOrdered, Pencil, SlidersHorizontal, Plus, RotateCcw, ShieldAlert, Sparkles, Upload } from 'lucide-react';
 import { z } from 'zod';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -25,6 +25,8 @@ import { ChecklistTemplatesSheet } from './ChecklistTemplatesSheet';
 import { RestoreDialog } from './RestoreDialog';
 import { ClientProfileSheet } from './ClientProfileSheet';
 import { ReadinessDimensionsSheet } from './ReadinessDimensionsSheet';
+import { removeSampleData, sampleDataSummary, type SampleDataSummary } from '@/data/adminMutations';
+import { run } from '@/state/actions';
 
 const clientSchema = z.object({
   name: z.string().trim().min(2, 'Enter the client name (at least 2 characters).').max(120),
@@ -52,6 +54,8 @@ export function AdminPage() {
   const [restoreOpen, setRestoreOpen] = useState(false);
   const [profile, setProfile] = useState<string | null>(null);
   const [dimsOpen, setDimsOpen] = useState(false);
+  const [sampleOpen, setSampleOpen] = useState(false);
+  const samples = sampleDataSummary(data);
   const clients = listClients(data, { includeArchived: true });
 
   useEffect(() => {
@@ -94,6 +98,16 @@ export function AdminPage() {
   };
 
   const exportBackup = exportFullBackup;
+
+  const removeSamples = () => {
+    let purge: string[] = [];
+    const r = run(
+      (d) => void (purge = removeSampleData(d)),
+      { clientId: null, entity: 'project', entityId: null, summary: `Removed ${samples.projects} sample project${samples.projects === 1 ? '' : 's'}` },
+    );
+    if (r.ok) purge.forEach((id) => void mediaStore().delete(id).catch(() => undefined));
+    setSampleOpen(false);
+  };
 
   return (
     <>
@@ -175,6 +189,11 @@ export function AdminPage() {
                 Remove unreferenced images
               </Button>
             )}
+            {samples.projects > 0 && (
+              <Button variant="secondary" icon={<Eraser size={16} aria-hidden />} onClick={() => setSampleOpen(true)}>
+                Remove sample data
+              </Button>
+            )}
             <Button variant="danger" icon={<RotateCcw size={16} aria-hidden />} onClick={() => setResetOpen(true)}>
               Reset to demo data
             </Button>
@@ -214,6 +233,7 @@ export function AdminPage() {
       </div>
 
       <ResetDialog open={resetOpen} onClose={() => setResetOpen(false)} onExport={exportBackup} onConfirm={() => void resetAll()} />
+      <RemoveSamplesDialog open={sampleOpen} summary={samples} onClose={() => setSampleOpen(false)} onExport={exportBackup} onConfirm={removeSamples} />
       {categoriesOpen && <CategoriesSheet client={ws.client} data={data} onClose={() => setCategoriesOpen(false)} />}
       {restoreOpen && <RestoreDialog onClose={() => setRestoreOpen(false)} />}
       {profile && data.clients.find((c) => c.id === profile) && <ClientProfileSheet client={data.clients.find((c) => c.id === profile)!} currentClientId={ws.client.id} onClose={() => setProfile(null)} />}
@@ -295,6 +315,36 @@ function Field({ label, name, error, hint, required, placeholder, inputRef }: { 
         hint && <p id={`${id}-hint`} className="text-xs text-subtle">{hint}</p>
       )}
     </div>
+  );
+}
+
+function RemoveSamplesDialog({ open, summary, onClose, onConfirm, onExport }: { open: boolean; summary: SampleDataSummary; onClose(): void; onConfirm(): void; onExport(): void }) {
+  const n = summary.projects;
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      title="Remove sample data?"
+      size="sm"
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>Cancel</Button>
+          <Button variant="secondary" icon={<Download size={16} aria-hidden />} onClick={onExport}>Export backup first</Button>
+          <Button variant="danger" onClick={onConfirm}>Remove {n} sample project{n === 1 ? '' : 's'}</Button>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-3 text-sm text-muted">
+        <p>
+          This permanently removes the <strong className="text-ink">{n} fictional sample project{n === 1 ? '' : 's'}</strong> (marked “Sample”) from every workspace in this browser, together with their images
+          {summary.checklists ? ` and ${summary.checklists} checklist${summary.checklists === 1 ? '' : 's'}` : ''}.
+        </p>
+        <p>
+          <strong className="text-ink">Everything else is kept:</strong> people and leadership, workstreams, initiatives, actions, decisions, risks, milestones, meetings, reports, and any projects you created or imported.
+          {summary.unlinked ? ` ${summary.unlinked} of your record${summary.unlinked === 1 ? '' : 's'} linked to a sample project will be kept and unlinked.` : ''}
+        </p>
+      </div>
+    </Dialog>
   );
 }
 

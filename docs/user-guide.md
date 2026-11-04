@@ -30,6 +30,7 @@ Internal performance matters belong in internal notes only, and are never includ
 ## Data & backup (Administration)
 - **Export backup (JSON):** every workspace and image in this browser. Treat the file as confidential.
 - **Restore from backup:** choose a file to see a validation report and a per-client preview of what will be added, replaced or removed. Export the current data first, confirm, then *Replace all data*. Files from newer app versions, and the raw portfolio seed file, are refused.
+- **Remove sample data:** permanently removes the fictional sample projects (marked *Sample*) and their images. People, leadership, workstreams, initiatives, actions, decisions, meetings, reports, and projects you created or imported are kept. Records that were linked to a sample project are kept and unlinked. The button disappears once no samples remain.
 - **Reset to demo data:** replaces everything with the fictional demo set.
 - **Client profiles:** edit name, monogram, sector and status, or archive a client. At least one client must stay active.
 - **Configuration:** portfolio categories, readiness dimensions (a dimension with recorded assessments can't be removed), checklist templates. Meeting templates are managed under *Meetings → Templates*.

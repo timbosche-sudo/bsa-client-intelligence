@@ -47,6 +47,7 @@ GitHub Pages sites are **public**. Only publish the fictional demo dataset.
 - **Images:** headshots and project images are stored in this browser's IndexedDB and **embedded (base64) in backups**, so a backup file is self-contained. Browser storage quotas apply; *Administration* shows usage.
 - **Restore:** *Administration → Restore from backup*. It validates the file (format, schema version, references, images), shows what changes for each client, offers to export current data first, and replaces everything only after explicit confirmation.
 - **CSV:** *Portfolio → Export CSV* (filtered projects) and *Actions → Export CSV*.
+- **Remove sample data:** *Administration → Remove sample data* deletes only the fictional sample projects, so you can start entering real work without losing anything else.
 - **Reset:** *Administration → Reset to demo data* replaces all local data and deletes stored images. Export first.
 
 ## Strategy & accountability (Stage 3)
