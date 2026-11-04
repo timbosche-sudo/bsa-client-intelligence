@@ -18,7 +18,7 @@ const READINESS_COLOR: Record<ReadinessStatus, string> = {
 /** Executive summary of recorded portfolio facts. Readiness is shown only as explicit human assessments. */
 export function PortfolioHealth({ ws, summary }: { ws: ClientWorkspace; summary: PortfolioSummary }) {
   if (summary.total === 0) {
-    return <EmptyState compact title="No projects recorded yet">Projects can be added or imported in the Portfolio Readiness module (Stage 2).</EmptyState>;
+    return <EmptyState compact title="No projects recorded yet">Add or import projects in Portfolio Readiness.</EmptyState>;
   }
   const projects = active(ws.projects).filter((p) => p.categoryId !== 'archived');
   const readinessCounts = READINESS_ORDER.map((s) => ({ s, n: projects.filter((p) => p.overallReadiness.status === s).length })).filter((r) => r.n > 0);

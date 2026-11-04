@@ -132,8 +132,9 @@ export function ProjectDetailPage() {
             </div>
           </div>
         </div>
-        <button type="button" onClick={() => setTab('media')} className="aspect-[16/10] overflow-hidden rounded-xl border border-line" aria-label="Open project images">
+        <button type="button" onClick={() => setTab('media')} className="relative aspect-[16/10] overflow-hidden rounded-xl border border-line">
           <ProjectCover mediaId={project.coverImageId} alt={project.name} />
+          <span className="sr-only">Open images</span>
         </button>
       </header>
 

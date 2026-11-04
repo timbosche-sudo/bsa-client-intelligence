@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Building2, Database, Download, History, ListChecks, ListOrdered, Plus, RotateCcw, ShieldAlert, Sparkles, Upload } from 'lucide-react';
+import { Building2, Database, Download, History, ListChecks, ListOrdered, Pencil, SlidersHorizontal, Plus, RotateCcw, ShieldAlert, Sparkles, Upload } from 'lucide-react';
 import { z } from 'zod';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -8,7 +8,6 @@ import { Panel } from '@/components/ui/Card';
 import { Dialog } from '@/components/ui/Dialog';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PageHeader } from '@/components/ui/PageHeader';
-import { StageTag } from '@/components/ui/StageNotice';
 import { environment } from '@/config/environment';
 import { CLIENT_STATUS_LABELS } from '@/domain/labels';
 import { listClients } from '@/data/repository';
@@ -23,6 +22,9 @@ import { toast } from '@/state/toast';
 import { FieldError } from '@/components/form/fields';
 import { CategoriesSheet } from './CategoriesSheet';
 import { ChecklistTemplatesSheet } from './ChecklistTemplatesSheet';
+import { RestoreDialog } from './RestoreDialog';
+import { ClientProfileSheet } from './ClientProfileSheet';
+import { ReadinessDimensionsSheet } from './ReadinessDimensionsSheet';
 
 const clientSchema = z.object({
   name: z.string().trim().min(2, 'Enter the client name (at least 2 characters).').max(120),
@@ -47,6 +49,9 @@ export function AdminPage() {
   const [media, setMedia] = useState<{ count: number; orphans: string[]; quota: number | null; used: number | null } | null>(null);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [templatesOpen, setTemplatesOpen] = useState(false);
+  const [restoreOpen, setRestoreOpen] = useState(false);
+  const [profile, setProfile] = useState<string | null>(null);
+  const [dimsOpen, setDimsOpen] = useState(false);
   const clients = listClients(data, { includeArchived: true });
 
   useEffect(() => {
@@ -121,6 +126,7 @@ export function AdminPage() {
                   </div>
                   <Badge tone={c.status === 'active' ? 'accent' : 'outline'}>{CLIENT_STATUS_LABELS[c.status]}</Badge>
                   {c.id === ws.client.id && <Badge tone="neutral">Current</Badge>}
+                  <Button size="sm" variant="ghost" icon={<Pencil size={15} aria-hidden />} onClick={() => setProfile(c.id)}>Edit</Button>
                 </li>
               );
             })}
@@ -132,9 +138,10 @@ export function AdminPage() {
             <Button size="sm" icon={<ListChecks size={15} aria-hidden />} onClick={() => setTemplatesOpen(true)}>
               Readiness checklist templates
             </Button>
-            <p className="flex flex-wrap items-center gap-2 text-xs text-subtle">
-              Editing client profiles, archiving and other workspace configuration <StageTag stage={6} />
-            </p>
+            <Button size="sm" icon={<SlidersHorizontal size={15} aria-hidden />} onClick={() => setDimsOpen(true)}>
+              Readiness dimensions
+            </Button>
+            <p className="text-xs text-subtle">Meeting templates are managed from Meetings → Templates.</p>
           </div>
         </Panel>
 
@@ -160,8 +167,8 @@ export function AdminPage() {
             <Button variant="secondary" icon={<Download size={16} aria-hidden />} onClick={exportBackup}>
               Export backup (JSON)
             </Button>
-            <Button variant="secondary" disabled icon={<Upload size={16} aria-hidden />} title="Restore with preview is built in Stage 6">
-              Restore from backup <StageTag stage={6} />
+            <Button variant="secondary" icon={<Upload size={16} aria-hidden />} onClick={() => setRestoreOpen(true)}>
+              Restore from backup
             </Button>
             {!!media?.orphans.length && (
               <Button variant="secondary" icon={<Sparkles size={16} aria-hidden />} onClick={() => void cleanOrphans()}>
@@ -208,6 +215,9 @@ export function AdminPage() {
 
       <ResetDialog open={resetOpen} onClose={() => setResetOpen(false)} onExport={exportBackup} onConfirm={() => void resetAll()} />
       {categoriesOpen && <CategoriesSheet client={ws.client} data={data} onClose={() => setCategoriesOpen(false)} />}
+      {restoreOpen && <RestoreDialog onClose={() => setRestoreOpen(false)} />}
+      {profile && data.clients.find((c) => c.id === profile) && <ClientProfileSheet client={data.clients.find((c) => c.id === profile)!} currentClientId={ws.client.id} onClose={() => setProfile(null)} />}
+      {dimsOpen && <ReadinessDimensionsSheet client={ws.client} data={data} onClose={() => setDimsOpen(false)} />}
       {templatesOpen && <ChecklistTemplatesSheet client={ws.client} data={data} onClose={() => setTemplatesOpen(false)} />}
     </>
   );

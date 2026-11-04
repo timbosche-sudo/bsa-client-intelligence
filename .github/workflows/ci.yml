@@ -13,11 +13,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history for the confidentiality history scan
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
       - run: node scripts/check-confidential.mjs src public
+      - name: Confidentiality check (full git history)
+        run: node scripts/check-confidential.mjs --history
+      - run: npx tsc -b
       - run: npm test
       - run: npm run build

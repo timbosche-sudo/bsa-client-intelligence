@@ -61,7 +61,7 @@ export function ImportPage() {
         } catch {
           return setError('This file is not valid JSON.');
         }
-        if ((json as { format?: string })?.format === 'bsa-client-intelligence-backup') return setError('This is an application backup. Backups are restored from Administration (restore arrives in Stage 6), not imported as projects.');
+        if ((json as { format?: string })?.format === 'bsa-client-intelligence-backup') return setError('This is an application backup. Restore backups from Administration → Data & backup, not here.');
         if (!isSeedJson(json)) return setError('This JSON file is not in the recognized portfolio format (expected "client", "source" and "projects"). Use Excel or CSV with column mapping for other structures.');
         const parsed = parseSeedJson(json, file.name, ctx);
         setStep({ kind: 'review', preview: buildPreview(parsed, data, ctx), back: null });

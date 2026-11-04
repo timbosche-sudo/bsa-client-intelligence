@@ -7,6 +7,8 @@ Strategic client leadership and portfolio management platform for **BSA** Client
 
 ## Status
 
+**v1.0.0: prototype complete.** It's stable, documented and deployable with fictional demonstration data. It isn't ready for real client data on shared or public infrastructure. See [Known limitations & production requirements](docs/known-limitations.md).
+
 | Stage | Scope | Status |
 |---|---|---|
 | 1 | Platform foundation, design system, shell, Client Overview, domain model, local persistence | ✅ Complete |
@@ -14,7 +16,7 @@ Strategic client leadership and portfolio management platform for **BSA** Client
 | 3 | Workstreams, initiatives, actions, decisions, risks, restart checklists, accountability views | ✅ Complete |
 | 4 | Guided Meeting Mode: creation, templates, facilitation, closeout, finalization, history | ✅ Complete |
 | 5 | Reports (4 types, PDF), confidentiality & release approval, report history, AI interface (disabled) | ✅ Complete |
-| 6 | Administration, backup/restore, QA, PWA, deployment hardening | Next |
+| 6 | Administration, backup/restore, CSV export, QA (tests, accessibility, responsive), PWA, history confidentiality scan, documentation | ✅ Complete |
 
 ## Local development
 
@@ -25,6 +27,7 @@ npm install
 npm run dev          # http://localhost:5173
 npm test             # unit tests (Vitest)
 npm run build        # type-check, production build, confidentiality scan of dist/
+npm run check:history  # confidentiality scan of the full git history
 npm run preview      # serve the production build at http://localhost:4173
 ```
 
@@ -42,7 +45,8 @@ GitHub Pages sites are **public**. Only publish the fictional demo dataset.
 
 - **Export:** profile menu → *Export backup (JSON)*, or *Administration → Data & backup*. The file contains every workspace stored in that browser.
 - **Images:** headshots and project images are stored in this browser's IndexedDB and **embedded (base64) in backups**, so a backup file is self-contained. Browser storage quotas apply; *Administration* shows usage.
-- **Restore:** arrives in Stage 6 (with preview and confirmation).
+- **Restore:** *Administration → Restore from backup*. It validates the file (format, schema version, references, images), shows what changes for each client, offers to export current data first, and replaces everything only after explicit confirmation.
+- **CSV:** *Portfolio → Export CSV* (filtered projects) and *Actions → Export CSV*.
 - **Reset:** *Administration → Reset to demo data* replaces all local data and deletes stored images. Export first.
 
 ## Strategy & accountability (Stage 3)
@@ -99,6 +103,25 @@ Every import shows a preview first: new projects, existing matches (by client + 
 Keep real files (portfolio seed JSON, spreadsheets, headshots, renderings, backups) in `private-data/`, which is git-ignored.
 Import them through the app on an approved machine. Never place them in `src/` or `public/`.
 Field mapping for the Houston Methodist seed: [docs/seed-data-mapping.md](docs/seed-data-mapping.md).
+
+## Administration & installation (Stage 6)
+
+- **Client profiles:** edit name, monogram, sector, client code, summary and priorities, or archive a client. At least one stays active.
+- **Configuration:** portfolio categories, readiness dimensions (protected once assessed), checklist templates, and meeting templates (from Meetings).
+- **Install:** "Add to Home Screen" on iPad, or install from Chrome/Edge. The app shell works offline after the first visit, and data stays browser-local.
+
+## Documentation
+
+| Document | Contents |
+|---|---|
+| [docs/user-guide.md](docs/user-guide.md) | How to use the app |
+| [docs/known-limitations.md](docs/known-limitations.md) | Prototype limitations and **production security requirements** |
+| [docs/azure-production.md](docs/azure-production.md) | Future Azure architecture and migration path |
+| [docs/prototype-security.md](docs/prototype-security.md) | What Prototype Mode does and doesn't protect |
+| [docs/qa-record.md](docs/qa-record.md) | Test, accessibility, responsive and performance results |
+| [docs/architecture.md](docs/architecture.md) | Code structure and data model |
+| [docs/brand-standards.md](docs/brand-standards.md) | BSA 2026 brand implementation |
+| [docs/seed-data-mapping.md](docs/seed-data-mapping.md) | Portfolio seed field mapping |
 
 ## Architecture and future backend
 

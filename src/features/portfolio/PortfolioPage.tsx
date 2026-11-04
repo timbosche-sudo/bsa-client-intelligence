@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowDown, ArrowUp, Building2, FileUp, LayoutGrid, Plus, Rows3, Search, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Building2, Download, FileUp, LayoutGrid, Plus, Rows3, Search, X } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -12,6 +12,7 @@ import { READINESS_LABELS, type Project, type ReadinessStatus } from '@/domain/t
 import { cn } from '@/lib/cn';
 import { formatCurrency, formatDate, formatPercent, TBC } from '@/lib/format';
 import { useRequiredWorkspace } from '@/state/useWorkspace';
+import { csvFilename, downloadCsv } from '@/services/csv';
 import { ProjectCover } from './ProjectCover';
 import { ProjectEditSheet } from './ProjectEditSheet';
 import { EMPTY_FILTERS, filterOptions, filterProjects, matchesCategory, principalLabel, sortProjects, type PortfolioFilters, type SortKey, type SortState } from './projectFilters';
@@ -114,6 +115,39 @@ export function PortfolioPage() {
             <option value="updated:desc">Sort: Recently updated</option>
           </select>
         </div>
+        <div className="flex justify-end">
+          <Button
+            size="sm"
+            variant="ghost"
+            icon={<Download size={15} />}
+            onClick={() =>
+              downloadCsv(csvFilename(ws.client.name, 'Portfolio'), [
+                ['Project number', 'Project name', 'Category', 'Studio', 'Type', 'Location', 'Relationship principal', 'BSA fee', 'Pipeline probability', 'Architecture %', 'Engineering %', 'Interiors %', 'Anticipated start', 'Anticipated completion', 'Overall readiness', 'Sample record', 'Archived'],
+                ...shown.map((p) => [
+                  p.projectNumber,
+                  p.name,
+                  categoryLabel(ws, p),
+                  p.studio,
+                  p.projectType,
+                  p.location,
+                  principalLabel(ws, p),
+                  p.businessDevelopment.bsaFee,
+                  p.businessDevelopment.pipelineProbability,
+                  p.businessDevelopment.feeMix.architecture,
+                  p.businessDevelopment.feeMix.engineering,
+                  p.businessDevelopment.feeMix.interiors,
+                  p.businessDevelopment.anticipatedStart,
+                  p.businessDevelopment.anticipatedCompletion,
+                  READINESS_LABELS[p.overallReadiness.status],
+                  p.isSample ? 'Yes' : 'No',
+                  p.archivedAt ? 'Yes' : 'No',
+                ]),
+              ])
+            }
+          >
+            Export CSV ({shown.length})
+          </Button>
+        </div>
         {activeFilterCount > 0 && (
           <div className="flex items-center gap-3 text-sm text-muted">
             <span>
@@ -188,14 +222,14 @@ function ProjectCard({ ws, project: p }: { ws: ClientWorkspace; project: Project
       <div className="relative aspect-[16/9] border-b border-line">
         <ProjectCover mediaId={p.coverImageId} alt={p.name} />
         <div className="absolute left-3 top-3 flex gap-1.5">
-          <Badge tone="neutral" className="bg-black/80 text-white">{categoryLabel(ws, p)}</Badge>
+          <Badge tone="overlay">{categoryLabel(ws, p)}</Badge>
           {p.isSample && <SampleBadge />}
-          {p.archivedAt && <Badge tone="neutral" className="bg-black/80 text-white">Archived</Badge>}
+          {p.archivedAt && <Badge tone="overlay">Archived</Badge>}
         </div>
       </div>
       <div className="flex flex-1 flex-col p-4">
         <p className="tabular text-xs text-subtle">{p.projectNumber ?? 'No project number'}</p>
-        <h3 className="mt-1 font-black leading-snug tracking-tight group-hover:underline">{p.name}</h3>
+        <h2 className="mt-1 font-black leading-snug tracking-tight group-hover:underline">{p.name}</h2>
         <dl className="my-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
           <Fact label="Principal" value={principal} />
           <Fact label="BSA fee" value={p.businessDevelopment.bsaFee === null ? null : formatCurrency(p.businessDevelopment.bsaFee)} tabular />

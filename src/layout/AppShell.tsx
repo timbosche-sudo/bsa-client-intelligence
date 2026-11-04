@@ -62,11 +62,11 @@ export function AppShell() {
               type="button"
               onClick={() => setSearchOpen(true)}
               className="inline-flex h-11 shrink-0 items-center gap-2 rounded-lg border border-line bg-surface-2 px-3 text-sm text-subtle hover:border-line-strong hover:text-muted max-md:w-11 max-md:justify-center max-md:px-0"
-              aria-label="Search this workspace"
+              aria-keyshortcuts="Control+K Meta+K"
             >
               <Search size={17} aria-hidden />
-              <span className="hidden md:inline">Search</span>
-              <kbd className="ml-4 hidden rounded border border-line px-1.5 text-[10px] text-subtle lg:inline">⌘K</kbd>
+              <span className="sr-only md:not-sr-only">Search</span>
+              <kbd aria-hidden className="ml-4 hidden rounded border border-line px-1.5 text-[10px] text-subtle lg:inline">⌘K</kbd>
             </button>
             <SaveIndicator />
             <span className="hidden sm:inline-flex"><PrototypeBadge /></span>

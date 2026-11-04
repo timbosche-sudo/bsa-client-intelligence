@@ -138,7 +138,7 @@ function Structure({ ws, onOpen }: { ws: ClientWorkspace; onOpen(s: SheetState):
                   </div>
                 </div>
                 {tierMembers.length + openSeats.length > 0 ? (
-                  <ul className="mt-4 grid gap-2 sm:grid-cols-2 2xl:grid-cols-3">
+                  <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-3">
                     {tierMembers.map((m) => {
                       const p = person(m.personId);
                       const seat = seatOf(m.id);

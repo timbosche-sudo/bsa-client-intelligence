@@ -1,23 +1,36 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect, type ComponentType, type ReactNode } from 'react';
 import { createHashRouter, Navigate, RouterProvider, useRouteError, Link } from 'react-router-dom';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { LocalStorageAdapter } from '@/data/persistence/LocalStorageAdapter';
 import { listClients } from '@/data/repository';
 import { AppShell } from '@/layout/AppShell';
 import { ClientOverviewPage } from '@/features/overview/ClientOverviewPage';
-import { LeadershipPage } from '@/features/leadership/LeadershipPage';
-import { PortfolioPage } from '@/features/portfolio/PortfolioPage';
-import { ProjectDetailPage } from '@/features/portfolio/ProjectDetailPage';
-import { ImportPage } from '@/features/import/ImportPage';
-import { InitiativeDetailPage } from '@/features/strategy/InitiativeDetailPage';
-import { WorkstreamsPage } from '@/features/workstreams/WorkstreamsPage';
-import { MeetingsPage } from '@/features/meetings/MeetingsPage';
-import { MeetingRecordPage } from '@/features/meetings/MeetingRecordPage';
-import { MeetingModePage } from '@/features/meetings/MeetingModePage';
-import { ActionsDecisionsPage } from '@/features/actions/ActionsDecisionsPage';
-import { ReportsPage } from '@/reports/ReportsPage';
-import { ReportViewerPage } from '@/reports/ReportViewerPage';
-import { AdminPage } from '@/features/admin/AdminPage';
+// Route-level code splitting: each module loads on first visit (the Client Overview is in the main bundle).
+const lazyPage = <K extends string>(load: () => Promise<Record<K, ComponentType>>, name: K) =>
+  lazy(() => load().then((m) => ({ default: m[name] })));
+const LeadershipPage = lazyPage(() => import('@/features/leadership/LeadershipPage'), 'LeadershipPage');
+const PortfolioPage = lazyPage(() => import('@/features/portfolio/PortfolioPage'), 'PortfolioPage');
+const ProjectDetailPage = lazyPage(() => import('@/features/portfolio/ProjectDetailPage'), 'ProjectDetailPage');
+const ImportPage = lazyPage(() => import('@/features/import/ImportPage'), 'ImportPage');
+const InitiativeDetailPage = lazyPage(() => import('@/features/strategy/InitiativeDetailPage'), 'InitiativeDetailPage');
+const WorkstreamsPage = lazyPage(() => import('@/features/workstreams/WorkstreamsPage'), 'WorkstreamsPage');
+const MeetingsPage = lazyPage(() => import('@/features/meetings/MeetingsPage'), 'MeetingsPage');
+const MeetingRecordPage = lazyPage(() => import('@/features/meetings/MeetingRecordPage'), 'MeetingRecordPage');
+const MeetingModePage = lazyPage(() => import('@/features/meetings/MeetingModePage'), 'MeetingModePage');
+const ActionsDecisionsPage = lazyPage(() => import('@/features/actions/ActionsDecisionsPage'), 'ActionsDecisionsPage');
+const ReportsPage = lazyPage(() => import('@/reports/ReportsPage'), 'ReportsPage');
+const ReportViewerPage = lazyPage(() => import('@/reports/ReportViewerPage'), 'ReportViewerPage');
+const AdminPage = lazyPage(() => import('@/features/admin/AdminPage'), 'AdminPage');
+
+function PageFallback() {
+  return (
+    <div className="flex min-h-[40vh] items-center justify-center text-subtle" role="status">
+      <Loader2 className="mr-2 animate-spin" size={18} aria-hidden /> Loading…
+    </div>
+  );
+}
+const S = (el: ReactNode) => <Suspense fallback={<PageFallback />}>{el}</Suspense>;
+
 import { Button } from '@/components/ui/Button';
 import { Toaster } from '@/components/ui/Toaster';
 import { usePreferences } from '@/state/preferences';
@@ -56,7 +69,7 @@ const router = createHashRouter([
   { path: '/', element: <RootRedirect />, errorElement: <RouteError /> },
   { path: '/setup', element: <NoClients /> },
   // Meeting Mode is a focus view outside the app shell (no sidebar).
-  { path: '/c/:clientId/meetings/:meetingId/run', element: <MeetingModePage />, errorElement: <RouteError /> },
+  { path: '/c/:clientId/meetings/:meetingId/run', element: S(<MeetingModePage />), errorElement: <RouteError /> },
   {
     path: '/c/:clientId',
     element: <AppShell />,
@@ -64,18 +77,18 @@ const router = createHashRouter([
     children: [
       { index: true, element: <Navigate to="overview" replace /> },
       { path: 'overview', element: <ClientOverviewPage /> },
-      { path: 'leadership', element: <LeadershipPage /> },
-      { path: 'portfolio', element: <PortfolioPage /> },
-      { path: 'portfolio/import', element: <ImportPage /> },
-      { path: 'portfolio/:projectId', element: <ProjectDetailPage /> },
-      { path: 'workstreams', element: <WorkstreamsPage /> },
-      { path: 'initiatives/:initiativeId', element: <InitiativeDetailPage /> },
-      { path: 'meetings', element: <MeetingsPage /> },
-      { path: 'meetings/:meetingId', element: <MeetingRecordPage /> },
-      { path: 'actions', element: <ActionsDecisionsPage /> },
-      { path: 'reports', element: <ReportsPage /> },
-      { path: 'reports/:reportId', element: <ReportViewerPage /> },
-      { path: 'admin', element: <AdminPage /> },
+      { path: 'leadership', element: S(<LeadershipPage />) },
+      { path: 'portfolio', element: S(<PortfolioPage />) },
+      { path: 'portfolio/import', element: S(<ImportPage />) },
+      { path: 'portfolio/:projectId', element: S(<ProjectDetailPage />) },
+      { path: 'workstreams', element: S(<WorkstreamsPage />) },
+      { path: 'initiatives/:initiativeId', element: S(<InitiativeDetailPage />) },
+      { path: 'meetings', element: S(<MeetingsPage />) },
+      { path: 'meetings/:meetingId', element: S(<MeetingRecordPage />) },
+      { path: 'actions', element: S(<ActionsDecisionsPage />) },
+      { path: 'reports', element: S(<ReportsPage />) },
+      { path: 'reports/:reportId', element: S(<ReportViewerPage />) },
+      { path: 'admin', element: S(<AdminPage />) },
       { path: '*', element: <Navigate to="overview" replace /> },
     ],
   },

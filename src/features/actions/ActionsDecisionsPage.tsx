@@ -1,13 +1,14 @@
 import { useEffect, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { ClipboardPlus, Gavel, Search, ShieldPlus } from 'lucide-react';
+import { ClipboardPlus, Download, Gavel, Search, ShieldPlus } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { PageHeader } from '@/components/ui/PageHeader';
 import { TabPanel, Tabs } from '@/components/ui/Tabs';
 import { active, isOverdue, type ClientWorkspace } from '@/data/repository';
 import { ACTION_STATUS_LABELS, DECISION_STATUS_LABELS, OPEN_ACTION_STATUSES, PENDING_DECISION_STATUSES, PRIORITY_LABELS, SEVERITY_LABELS } from '@/domain/labels';
-import type { ActionItem } from '@/domain/types';
+import { CONFIDENTIALITY_LABELS, type ActionItem } from '@/domain/types';
+import { csvFilename, downloadCsv } from '@/services/csv';
 import { cn } from '@/lib/cn';
 import { useRequiredWorkspace } from '@/state/useWorkspace';
 import { ActionList, DecisionList, RiskList } from '@/features/strategy/RecordRows';
@@ -174,7 +175,38 @@ function ActionsTab({ ws, get, set, onOpen }: FilterProps) {
             <option value="owner">Group: Owner</option>
           </select>
         </div>
-        <p className="text-sm text-muted" role="status">{rows.length} action{rows.length === 1 ? '' : 's'}{rows.filter((a) => isOverdue(a)).length ? ` · ${rows.filter((a) => isOverdue(a)).length} overdue` : ''}</p>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm text-muted" role="status">{rows.length} action{rows.length === 1 ? '' : 's'}{rows.filter((a) => isOverdue(a)).length ? ` · ${rows.filter((a) => isOverdue(a)).length} overdue` : ''}</p>
+          <Button
+            size="sm"
+            variant="ghost"
+            icon={<Download size={15} />}
+            onClick={() =>
+              downloadCsv(csvFilename(ws.client.name, 'Actions'), [
+                ['Action', 'Description', 'Owner', 'Supporting', 'Due date', 'Overdue', 'Priority', 'Status', 'Commitment', 'Workstream', 'Initiative', 'Project', 'Completed', 'Completion notes', 'Confidentiality'],
+                ...rows.map((a) => [
+                  a.title,
+                  a.description,
+                  ws.people.find((p) => p.id === a.ownerId)?.fullName ?? 'Unassigned',
+                  a.participantIds.map((id) => ws.people.find((p) => p.id === id)?.fullName ?? '').filter(Boolean).join('; '),
+                  a.dueDate,
+                  isOverdue(a) ? 'Yes' : 'No',
+                  PRIORITY_LABELS[a.priority],
+                  ACTION_STATUS_LABELS[a.status],
+                  a.commitment === 'confirmed' ? 'Confirmed' : 'Proposed',
+                  ws.workstreams.find((w) => w.id === a.workstreamId)?.title,
+                  ws.initiatives.find((i) => i.id === a.initiativeId)?.title,
+                  ws.projects.find((p) => p.id === a.projectId)?.name,
+                  a.completedAt,
+                  a.completionNotes,
+                  CONFIDENTIALITY_LABELS[a.confidentiality],
+                ]),
+              ])
+            }
+          >
+            Export CSV
+          </Button>
+        </div>
       </div>
       <div className="flex flex-col gap-4">
         {groups.map((g) => (

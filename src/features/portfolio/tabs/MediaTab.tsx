@@ -106,7 +106,7 @@ function ImageTile({ rec, isCover, onView, onEdit, onCover, onDelete }: { rec: M
       <button type="button" onClick={onView} className="relative aspect-[4/3] bg-surface-3" aria-label={`View ${rec.caption || rec.fileName}`}>
         {url && <img src={url} alt={rec.caption || ''} className="h-full w-full object-cover" loading="lazy" />}
         <span className="absolute left-2 top-2 flex gap-1.5">
-          <Badge tone="neutral" className="bg-black/80 text-white">{MEDIA_KIND_LABELS[rec.kind]}</Badge>
+          <Badge tone="overlay">{MEDIA_KIND_LABELS[rec.kind]}</Badge>
           {isCover && <Badge tone="accent">Cover</Badge>}
         </span>
       </button>

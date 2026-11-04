@@ -1,15 +1,14 @@
 import { ChevronRight, CircleDashed } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card } from '@/components/ui/Card';
-import { StageTag } from '@/components/ui/StageNotice';
 import type { ClientWorkspace } from '@/data/repository';
 
-const STEPS: { title: string; stage?: number; to?: string }[] = [
+const STEPS: { title: string; to?: string }[] = [
   { title: 'Confirm relationship lead and executive sponsor', to: 'leadership' },
   { title: 'Build the Client Team roster and leadership structure', to: 'leadership' },
   { title: 'Add or import the project portfolio', to: 'portfolio' },
-  { title: 'Define strategic workstreams and initiatives', stage: 3 },
-  { title: 'Configure the kickoff meeting template', stage: 4 },
+  { title: 'Define strategic workstreams and initiatives', to: 'workstreams' },
+  { title: 'Plan the Client Team kickoff meeting', to: 'meetings' },
 ];
 
 /** Shown for workspaces that exist but have not been configured (e.g. Memorial Health). */
@@ -34,7 +33,6 @@ export function OnboardingPanel({ ws }: { ws: ClientWorkspace }) {
               <div className="flex min-h-12 items-center gap-3 rounded-lg border border-line bg-surface-2 px-4">
                 <CircleDashed size={16} className="shrink-0 text-subtle" aria-hidden />
                 <span className="flex-1 text-sm">{s.title}</span>
-                {s.stage && <StageTag stage={s.stage} />}
               </div>
             )}
           </li>

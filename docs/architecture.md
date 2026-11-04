@@ -91,9 +91,11 @@ the user is offered a download of it first.
 | 3 ✅ | `data/strategyMutations.ts` (workstreams, initiatives, actions, decisions, risks, checklists with integrity rules), `data/accountability.ts` (person / workstream views), `features/strategy` (shared record editors via `useRecordSheet`), schema v3 |
 | 4 ✅ | `data/meetingMutations.ts` (lifecycle scheduled → in_progress → closeout → finalized, snapshot, amendments), `data/meetingSelectors.ts` (captures, continuity, rule-based suggestions), `features/meetings` (Meeting Mode route outside the app shell), schema v4 |
 | 5 ✅ | `src/reports`: pure builders (`ClientWorkspace` → `ReportDoc`), shared HTML preview and pdfmake renderer (lazy-loaded, Lato WOFF embedded), versioned frozen `ReportRecord`s with client-release approval; `src/ai/aiProvider.ts` (disabled), schema v5 |
-| 6 | Restore with preview, admin configuration, service worker, accessibility/performance QA |
+| 6 ✅ | `services/restore.ts` (validated, previewed restore incl. media), `services/csv.ts` (injection-safe CSV), `data/adminMutations.ts` (client profiles/archiving, readiness dimensions), route-level code splitting, app-shell service worker (`public/sw.js`, build-stamped cache), global error handling, history confidentiality scan |
 
 ## Future production (Azure) — outline
+
+Full detail: [azure-production.md](azure-production.md). Limitations and requirements: [known-limitations.md](known-limitations.md).
 
 - **Identity:** Microsoft Entra ID (MSAL in the SPA, tokens validated server-side). App roles map to `AppRole`.
 - **API:** Azure Functions or App Service implementing a `RemoteApiAdapter` behind `StorageAdapter`, with per-client

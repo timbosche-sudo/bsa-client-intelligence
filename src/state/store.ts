@@ -24,6 +24,8 @@ interface DataState {
   mutate(recipe: (draft: Dataset) => void, activity?: { clientId: string | null; entity: string; entityId: string | null; summary: string }): void;
   flush(): Promise<void>;
   resetToDemo(): Promise<void>;
+  /** Replaces the entire dataset (restore). Persists before updating state. */
+  replaceData(data: Dataset): Promise<void>;
   addClient(input: { name: string; shortName?: string; monogram?: string; sector?: string }): Client;
 }
 
@@ -95,6 +97,13 @@ export const useDataStore = create<DataState>((set, get) => ({
     } catch (err) {
       set({ saveState: 'error', saveError: err instanceof Error ? err.message : String(err) });
     }
+  },
+
+  async replaceData(data) {
+    const adapter = get().adapter;
+    if (saveTimer) clearTimeout(saveTimer);
+    if (adapter) await adapter.save(data);
+    set({ data, saveState: 'saved', saveError: null, lastSavedAt: nowIso(), loadState: 'ready', loadError: null });
   },
 
   async resetToDemo() {

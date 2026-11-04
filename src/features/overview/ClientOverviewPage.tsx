@@ -14,6 +14,7 @@ import {
   Users,
 } from 'lucide-react';
 import { Avatar } from '@/components/ui/Avatar';
+import { PersonAvatar } from '@/components/PersonAvatar';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card, Panel } from '@/components/ui/Card';
@@ -239,23 +240,23 @@ function Hero({ ws, onStartMeeting }: { ws: ClientWorkspace; onStartMeeting(): v
           {ws.client.sector && <p className="mt-1.5 text-sm text-subtle">{ws.client.sector}</p>}
           {ws.client.summary && <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted sm:text-[15px]">{ws.client.summary}</p>}
 
-          <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-4">
+          <div className="mt-6 flex flex-wrap gap-x-8 gap-y-4">
             <div className="flex items-center gap-3">
-              <Avatar name={lead} size="md" />
-              <div>
+              <PersonAvatar person={leadPerson} size="md" />
+              <dl>
                 <dt className="eyebrow">Relationship lead</dt>
                 <dd className="text-sm font-medium">{lead ?? 'Unassigned'}</dd>
                 {leadPerson && <dd className="text-xs text-subtle">{[leadPerson.title, leadPerson.studio].filter(Boolean).join(' · ')}</dd>}
-              </div>
+              </dl>
             </div>
             <div className="flex items-center gap-3">
-              <Avatar name={sponsor} size="md" />
-              <div>
+              <PersonAvatar person={ws.people.find((p) => p.id === ws.client.executiveSponsorId)} size="md" />
+              <dl>
                 <dt className="eyebrow">Executive sponsor</dt>
                 <dd className={`text-sm font-medium ${sponsor ? '' : 'text-subtle'}`}>{sponsor ?? 'Not yet assigned'}</dd>
-              </div>
+              </dl>
             </div>
-          </dl>
+          </div>
         </div>
         <div className="flex shrink-0 flex-col gap-2 sm:flex-row lg:flex-col xl:flex-row">
           <Button variant="primary" size="lg" icon={<Play size={18} aria-hidden />} onClick={onStartMeeting}>

@@ -197,7 +197,7 @@ function Block({ title, action, children }: { title: string; action?: React.Reac
   return (
     <section className="border-t border-line-strong pt-4">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h3 className="eyebrow text-ink">{title}</h3>
+        <h2 className="eyebrow text-ink">{title}</h2>
         {action}
       </div>
       {children}
