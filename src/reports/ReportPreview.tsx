@@ -1,5 +1,5 @@
 import { CONFIDENTIALITY_LABELS, type ReportBlock, type ReportDoc } from '@/domain/types';
-import { Logo, hasOfficialLogo } from '@/brand/Logo';
+import { Logo, officialLogo } from '@/brand/Logo';
 import { formatDateTime } from '@/lib/format';
 import { cn } from '@/lib/cn';
 import { confidentialityLine } from './pdf';
@@ -19,7 +19,7 @@ export function ReportPreview({ doc, draft }: { doc: ReportDoc; draft: boolean }
       )}
       <div className="relative px-5 py-6 sm:px-12 sm:py-10">
         <header className="mb-6 flex items-center justify-between gap-4 text-[11px] text-[#58595b]">
-          {hasOfficialLogo ? <span className="[&_img]:h-4"><Logo height={16} /></span> : <span className="text-sm font-black text-black">BSA</span>}
+          {officialLogo.red ? <span className="[&_img]:h-4"><Logo height={16} variant="red" /></span> : <span className="text-sm font-black text-black">BSA</span>}
           <span className="truncate text-right">{doc.clientName} · {doc.title}</span>
         </header>
         <p className="text-[11px] uppercase tracking-[0.16em] text-[#58595b]">{doc.clientName}</p>

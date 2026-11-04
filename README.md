@@ -135,6 +135,7 @@ auth provider, without rewriting the UI.
 The UI follows the **BSA Brand Style Guide 2026** (Lato, the BSA palette, black/white backgrounds, perfect circles,
 1pt divisions); see [docs/brand-standards.md](docs/brand-standards.md).
 
-**Official logo:** the logo is never recreated. Download the white and red logo files from **Open Asset** and save
-them as `src/brand/assets/bsa-logo-white.svg` and `bsa-logo-red.svg`; the app uses them automatically.
+**Official logo:** installed in `src/brand/assets/` (red file supplied by BSA; the white version is the same artwork with a
+white fill). The white logo is used on the dark theme, the red one on light backgrounds, report previews and PDFs.
+The logo is never recreated.
 The app icons in `public/icon*` are still neutral placeholders.

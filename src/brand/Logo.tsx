@@ -12,9 +12,10 @@ export const officialLogo = { white: find('white'), red: find('red') };
 export const hasOfficialLogo = !!(officialLogo.white || officialLogo.red);
 
 /** Renders the official logo for the current theme: white on dark, red on light (Brand Guide p.11). */
-export function Logo({ height = 22, className }: { height?: number; className?: string }) {
+export function Logo({ height = 22, className, variant }: { height?: number; className?: string; /** Force a version, e.g. red on a white document regardless of theme. */ variant?: 'red' | 'white' }) {
   const theme = usePreferences((s) => s.theme);
-  const src = theme === 'dark' ? officialLogo.white : officialLogo.red ?? officialLogo.white;
-  if (!src || (theme === 'light' && !officialLogo.red)) return null;
+  const want = variant ?? (theme === 'dark' ? 'white' : 'red');
+  const src = officialLogo[want];
+  if (!src) return null;
   return <img src={src} alt="BSA" style={{ height }} className={cn('block w-auto select-none', className)} draggable={false} />;
 }

@@ -23,7 +23,7 @@
 - **Import covers projects only** (seed JSON, Excel, CSV). People, actions and decisions are entered in the app or restored from backup.
 - **Restore replaces all data** in the browser. There is no per-client merge.
 - **Readiness, health and risk are never inferred.** Values show only when a person records them. This is intentional, not a gap.
-- **Official BSA logo files** must be added from Open Asset (`src/brand/assets/`). Until then a text wordmark is shown, and the app icons are neutral placeholders.
+- **App icons** (home-screen and browser tab) are still neutral placeholders. The official logo is installed for the app header and reports.
 
 ## Production security requirements
 

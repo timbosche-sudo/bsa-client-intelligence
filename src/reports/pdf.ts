@@ -102,14 +102,23 @@ function block(b: ReportBlock): Content {
   }
 }
 
+/** Official red logo as SVG text, with CSS class fills inlined (the PDF SVG renderer ignores <style>). */
 async function logoSvg(): Promise<string | null> {
   const url = officialLogo.red;
-  if (!url || !url.endsWith('.svg')) return null;
+  if (!url || !(url.endsWith('.svg') || url.startsWith('data:image/svg+xml'))) return null;
   try {
-    return await (await fetch(url)).text();
+    return inlineSvgClassFills(await (await fetch(url)).text());
   } catch {
     return null;
   }
+}
+
+export function inlineSvgClassFills(svg: string): string {
+  const fills = new Map<string, string>();
+  for (const m of svg.matchAll(/\.([\w-]+)\s*\{[^}]*?fill:\s*([^;}\s]+)/g)) fills.set(m[1], m[2]);
+  return svg
+    .replace(/<style[\s\S]*?<\/style>/g, '')
+    .replace(/class=["']([\w-]+)["']/g, (all, cls: string) => (fills.has(cls) ? `fill="${fills.get(cls)}"` : all));
 }
 
 export function reportFilename(doc: ReportDoc, draft: boolean): string {
