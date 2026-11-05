@@ -29,7 +29,7 @@ export function InitiativeDetailPage() {
   if (!i) {
     return (
       <Card>
-        <EmptyState title="Initiative not found in this workspace" action={<Link to={`/c/${ws.client.id}/workstreams`} className="font-bold text-accent hover:underline">Back to workstreams</Link>} />
+        <EmptyState title="Action plan not found in this workspace" action={<Link to={`/c/${ws.client.id}/workstreams`} className="font-bold text-accent hover:underline">Back to initiatives</Link>} />
       </Card>
     );
   }
@@ -46,13 +46,13 @@ export function InitiativeDetailPage() {
   return (
     <>
       <Link to={`/c/${ws.client.id}/workstreams`} className="-ml-2 mb-4 inline-flex min-h-11 items-center gap-1 rounded-lg px-2 text-sm text-muted hover:text-ink">
-        <ChevronLeft size={16} aria-hidden /> Workstreams
+        <ChevronLeft size={16} aria-hidden /> Accountable Initiatives
       </Link>
 
       <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="min-w-0">
           <div className="mb-3 flex flex-wrap items-center gap-2">
-            <p className="eyebrow">{workstream ? `Workstream ${workstream.order} · ${workstream.title}` : 'No workstream'}</p>
+            <p className="eyebrow">{workstream ? `Initiative ${workstream.order} · ${workstream.title}` : 'No initiative'}</p>
             <InitiativeStatusBadge status={i.status} />
             <ConfidentialityBadge level={i.confidentiality} />
             {i.archivedAt && <Badge tone="caution">Archived</Badge>}
@@ -61,7 +61,7 @@ export function InitiativeDetailPage() {
           {i.description && <p className="mt-2 max-w-3xl text-sm text-muted md:text-[15px]">{i.description}</p>}
         </div>
         <Button variant="primary" icon={<Pencil size={16} />} onClick={() => open({ kind: 'initiative', id: i.id, onDeleted: () => navigate(`/c/${ws.client.id}/workstreams`) })} className="self-start">
-          Edit initiative
+          Edit action plan
         </Button>
       </header>
 
@@ -177,13 +177,13 @@ function RaciGrid({ ws, initiative: i }: { ws: ClientWorkspace; initiative: Init
     <Card className="mb-6 overflow-x-auto">
       <div className="border-b border-line-strong px-4 py-3 sm:px-5">
         <h2 className="font-black tracking-tight">Who is involved</h2>
-        <p className="text-xs text-subtle">RACI for the initiative, with each person’s open actions on it.</p>
+        <p className="text-xs text-subtle">RACI for the action plan, with each person’s open actions on it.</p>
       </div>
       <table className="w-full min-w-[520px] text-sm">
         <thead>
           <tr className="text-left text-[11px] uppercase tracking-[0.12em] text-subtle">
             <th className="px-5 py-2 font-normal">Person</th>
-            <th className="px-3 py-2 font-normal">Role on initiative</th>
+            <th className="px-3 py-2 font-normal">Role on action plan</th>
             <th className="px-3 py-2 text-right font-normal">Open actions owned</th>
           </tr>
         </thead>

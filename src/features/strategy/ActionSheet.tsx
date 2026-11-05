@@ -85,8 +85,8 @@ export function ActionSheet({ ws, actionId, defaults, onClose }: ActionSheetProp
         </FormSection>
 
         <FormSection title="Links">
-          <SelectField label="Workstream" value={a.workstreamId} onChange={(v) => set({ workstreamId: v || null })} placeholder="None" options={withCurrent(o.workstreamOptions, a.workstreamId, 'Archived workstream')} />
-          <SelectField label="Initiative" value={a.initiativeId} onChange={(v) => set({ initiativeId: v || null })} placeholder="None" options={withCurrent(o.initiativeOptions, a.initiativeId, 'Archived initiative')} />
+          <SelectField label="Initiative" value={a.workstreamId} onChange={(v) => set({ workstreamId: v || null })} placeholder="None" options={withCurrent(o.workstreamOptions, a.workstreamId, 'Archived initiative')} />
+          <SelectField label="Action plan" value={a.initiativeId} onChange={(v) => set({ initiativeId: v || null })} placeholder="None" options={withCurrent(o.initiativeOptions, a.initiativeId, 'Archived action plan')} />
           <SelectField label="Related project" value={a.projectId} onChange={(v) => set({ projectId: v || null })} placeholder="None" options={withCurrent(o.projectOptions, a.projectId, 'Archived project')} className="sm:col-span-2" />
           {a.meetingId && <p className="text-xs text-subtle sm:col-span-2">Recorded in a meeting.</p>}
         </FormSection>

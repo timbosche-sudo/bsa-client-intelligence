@@ -9,7 +9,7 @@ import { PersonAvatar } from '@/components/PersonAvatar';
 import { ConfidentialityBadge, InitiativeStatusBadge, WorkstreamStatusBadge } from '@/components/status';
 import { active, isOverdue, openActions, pendingDecisions, type ClientWorkspace } from '@/data/repository';
 import { reorderWorkstreams } from '@/data/strategyMutations';
-import type { Workstream } from '@/domain/types';
+import type { Initiative, Workstream } from '@/domain/types';
 import { cn } from '@/lib/cn';
 import { formatDate } from '@/lib/format';
 import { run } from '@/state/actions';
@@ -30,7 +30,7 @@ export function WorkstreamsPage() {
     const next = [...activeIds];
     next.splice(i, 1);
     next.splice(i + delta, 0, id);
-    run((d) => reorderWorkstreams(d, ws.client.id, next), { clientId: ws.client.id, entity: 'workstream', entityId: id, summary: 'Reordered workstreams' }, false);
+    run((d) => reorderWorkstreams(d, ws.client.id, next), { clientId: ws.client.id, entity: 'workstream', entityId: id, summary: 'Reordered initiatives' }, false);
   };
   const toggle = (id: string) =>
     setExpanded((s) => {
@@ -52,16 +52,16 @@ export function WorkstreamsPage() {
               <input type="checkbox" checked={showArchived} onChange={(e) => setShowArchived(e.target.checked)} className="size-4 accent-[var(--accent)]" />
               Show archived
             </label>
-            <Button icon={<Target size={16} />} onClick={() => open({ kind: 'initiative', id: null })}>New initiative</Button>
-            <Button variant="primary" icon={<Plus size={16} />} onClick={() => open({ kind: 'workstream', id: null })}>New workstream</Button>
+            <Button icon={<Target size={16} />} onClick={() => open({ kind: 'initiative', id: null })}>New action plan</Button>
+            <Button variant="primary" icon={<Plus size={16} />} onClick={() => open({ kind: 'workstream', id: null })}>New initiative</Button>
           </>
         }
       />
 
       {streams.length === 0 ? (
         <Card>
-          <EmptyState title="No workstreams yet" action={<Button variant="primary" size="sm" onClick={() => open({ kind: 'workstream', id: null })}>Create a workstream</Button>}>
-            Workstreams organize initiatives, actions, decisions and risks.
+          <EmptyState title="No initiatives yet" action={<Button variant="primary" size="sm" onClick={() => open({ kind: 'workstream', id: null })}>Create an initiative</Button>}>
+            Initiatives organize action plans, actions, decisions and risks.
           </EmptyState>
         </Card>
       ) : (
@@ -114,7 +114,7 @@ function WorkstreamCard({ ws, w, expanded, onToggle, onOpen, canUp, canDown, onM
             <span className="inline-flex items-center gap-1.5">
               <PersonAvatar person={champion} size="sm" className="size-6" /> Champion: {champion?.fullName ?? 'Unassigned'}
             </span>
-            <span>{initiatives.length} initiative{initiatives.length === 1 ? '' : 's'}</span>
+            <span>{initiatives.length} action plan{initiatives.length === 1 ? '' : 's'}</span>
             <span>{actions.length} open action{actions.length === 1 ? '' : 's'}{overdue ? ` (${overdue} overdue)` : ''}</span>
             <span>{decisions.length} pending decision{decisions.length === 1 ? '' : 's'}</span>
             <span>{risks.length} open risk/issue{risks.length === 1 ? '' : 's'}</span>
@@ -132,46 +132,30 @@ function WorkstreamCard({ ws, w, expanded, onToggle, onOpen, canUp, canDown, onM
         <div id={panelId} className="flex flex-col gap-6 border-t border-line p-4 sm:p-5">
           <div className="grid gap-6 lg:grid-cols-2">
             <div>
-              <p className="eyebrow mb-3 text-ink">Topics</p>
+              <p className="eyebrow mb-3 text-ink">Focus areas</p>
               <ul className="flex flex-col gap-2">
                 {w.topics.map((t, i) => (
                   <li key={i} className="flex gap-2.5 text-sm"><span className="mt-2 size-1 shrink-0 rounded-full bg-ink" aria-hidden />{t}</li>
                 ))}
-                {!w.topics.length && <li className="text-sm text-subtle">No topics recorded.</li>}
+                {!w.topics.length && <li className="text-sm text-subtle">No focus areas recorded.</li>}
               </ul>
             </div>
             <div className="flex flex-col gap-4">
               <div>
-                <p className="eyebrow mb-2 text-ink">Deliverable</p>
+                <p className="eyebrow mb-2 text-ink">Desired outcome / deliverable</p>
                 <p className="flex items-start gap-2 text-sm"><FileCheck2 size={16} className="mt-0.5 shrink-0 text-accent" aria-hidden />{w.deliverable || 'Not defined'}</p>
               </div>
               {w.confidentialityNote && <p className="border-l-2 border-line-strong bg-surface-2 px-3 py-2 text-xs text-muted">{w.confidentialityNote}</p>}
             </div>
           </div>
 
-          <Block title="Initiatives" action={<Button size="sm" icon={<Target size={15} />} onClick={() => onOpen({ kind: 'initiative', id: null, defaults: { workstreamId: w.id } })}>Add initiative</Button>}>
+          <Block title="Action plans" action={<Button size="sm" icon={<Target size={15} />} onClick={() => onOpen({ kind: 'initiative', id: null, defaults: { workstreamId: w.id } })}>Add action plan</Button>}>
             {initiatives.length ? (
-              <ul className="grid gap-2 md:grid-cols-2">
-                {initiatives.map((i) => {
-                  const ch = ws.people.find((p) => p.id === i.championId);
-                  const n = openActions(ws).filter((a) => a.initiativeId === i.id).length;
-                  return (
-                    <li key={i.id}>
-                      <Link to={`/c/${ws.client.id}/initiatives/${i.id}`} className="flex min-h-16 items-center gap-3 rounded-lg border border-line bg-surface-2 p-3 hover:border-line-strong">
-                        <PersonAvatar person={ch} size="sm" />
-                        <span className="min-w-0 flex-1">
-                          <span className="block text-sm font-bold">{i.title}</span>
-                          <span className="block text-xs text-subtle">{ch?.fullName ?? 'Champion unassigned'} · {n} open action{n === 1 ? '' : 's'}{i.targetDate ? ` · Target ${formatDate(i.targetDate)}` : ''}</span>
-                        </span>
-                        <InitiativeStatusBadge status={i.status} />
-                        <ChevronRight size={16} className="text-subtle" aria-hidden />
-                      </Link>
-                    </li>
-                  );
-                })}
+              <ul className="flex flex-col gap-2">
+                {initiatives.map((i) => <ActionPlanRow key={i.id} ws={ws} plan={i} onOpen={onOpen} />)}
               </ul>
             ) : (
-              <p className="text-sm text-subtle">No initiatives yet.</p>
+              <p className="text-sm text-subtle">No action plans yet.</p>
             )}
           </Block>
 
@@ -193,6 +177,104 @@ function WorkstreamCard({ ws, w, expanded, onToggle, onOpen, canUp, canDown, onM
   );
 }
 
+/** An action plan within an initiative: a summary row that expands in place to show its details and linked records. */
+function ActionPlanRow({ ws, plan: i, onOpen }: { ws: ClientWorkspace; plan: Initiative; onOpen(r: SheetRequest): void }) {
+  const [open, setOpen] = useState(false);
+  const ch = ws.people.find((p) => p.id === i.championId);
+  const acts = openActions(ws).filter((a) => a.initiativeId === i.id);
+  const decisions = pendingDecisions(ws).filter((d) => d.initiativeId === i.id);
+  const risks = active(ws.risks).filter((r) => r.initiativeId === i.id && r.status !== 'closed');
+  const people = (ids: string[] | undefined) => (ids ?? []).map((id) => ws.people.find((p) => p.id === id)?.fullName).filter(Boolean).join(', ');
+  const projects = i.relatedProjectIds.map((id) => ws.projects.find((p) => p.id === id)).filter((p): p is NonNullable<typeof p> => !!p);
+  const bodyId = `plan-${i.id}`;
+  return (
+    <li className="rounded-lg border border-line bg-surface-2">
+      <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-controls={bodyId} className="flex min-h-16 w-full items-center gap-3 rounded-lg p-3 text-left hover:bg-surface-3">
+        <PersonAvatar person={ch} size="sm" />
+        <span className="min-w-0 flex-1">
+          <span className="block text-sm font-bold">{i.title}</span>
+          <span className="block text-xs text-subtle">{ch?.fullName ?? 'Champion unassigned'} · {acts.length} open action{acts.length === 1 ? '' : 's'}{i.targetDate ? ` · Target ${formatDate(i.targetDate)}` : ''}</span>
+        </span>
+        <InitiativeStatusBadge status={i.status} />
+        <ChevronDown size={16} className={cn('shrink-0 text-subtle transition-transform', open && 'rotate-180')} aria-hidden />
+      </button>
+      {open && (
+        <div id={bodyId} className="flex flex-col gap-4 border-t border-line p-3 sm:p-4">
+          <dl className="grid gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+            {i.description && (
+              <div className="sm:col-span-2">
+                <dt className="text-xs text-subtle">Description</dt>
+                <dd className="whitespace-pre-wrap">{i.description}</dd>
+              </div>
+            )}
+            <div className="sm:col-span-2">
+              <dt className="text-xs text-subtle">Desired outcome</dt>
+              <dd className={cn(!i.desiredOutcome && 'text-subtle')}>{i.desiredOutcome || 'Not recorded'}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-subtle">Champion (accountable)</dt>
+              <dd>{ch?.fullName ?? 'Unassigned'}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-subtle">Target date</dt>
+              <dd>{i.targetDate ? formatDate(i.targetDate) : 'Not set'}</dd>
+            </div>
+            {people(i.participantIds) && (
+              <div>
+                <dt className="text-xs text-subtle">Responsible</dt>
+                <dd>{people(i.participantIds)}</dd>
+              </div>
+            )}
+            {people(i.consultedIds) && (
+              <div>
+                <dt className="text-xs text-subtle">Consulted</dt>
+                <dd>{people(i.consultedIds)}</dd>
+              </div>
+            )}
+            {projects.length > 0 && (
+              <div className="sm:col-span-2">
+                <dt className="text-xs text-subtle">Related projects</dt>
+                <dd className="flex flex-wrap gap-x-3">
+                  {projects.map((p) => <Link key={p.id} to={`/c/${ws.client.id}/portfolio/${p.id}`} className="font-bold hover:underline">{p.name}</Link>)}
+                </dd>
+              </div>
+            )}
+          </dl>
+          <div>
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <p className="eyebrow text-ink">Open actions</p>
+              <Button size="sm" variant="ghost" icon={<ClipboardPlus size={15} />} onClick={() => onOpen({ kind: 'action', id: null, defaults: { workstreamId: i.workstreamId, initiativeId: i.id } })}>Add action</Button>
+            </div>
+            <div className="-mx-3 sm:-mx-4"><ActionList ws={ws} actions={acts} onOpen={(id) => onOpen({ kind: 'action', id })} empty="No open actions" /></div>
+          </div>
+          {(decisions.length > 0 || risks.length > 0) && (
+            <div className="grid gap-4 lg:grid-cols-2">
+              {decisions.length > 0 && (
+                <div>
+                  <p className="eyebrow mb-1 text-ink">Pending decisions</p>
+                  <div className="-mx-3 sm:-mx-4"><DecisionList ws={ws} decisions={decisions} onOpen={(id) => onOpen({ kind: 'decision', id })} /></div>
+                </div>
+              )}
+              {risks.length > 0 && (
+                <div>
+                  <p className="eyebrow mb-1 text-ink">Open risks &amp; issues</p>
+                  <div className="-mx-3 sm:-mx-4"><RiskList ws={ws} risks={risks} onOpen={(id) => onOpen({ kind: 'risk', id })} /></div>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" icon={<Pencil size={15} />} onClick={() => onOpen({ kind: 'initiative', id: i.id })}>Edit action plan</Button>
+            <Link to={`/c/${ws.client.id}/initiatives/${i.id}`} className="inline-flex h-9 items-center gap-1.5 rounded-lg px-3 text-sm font-bold text-accent hover:underline pointer-coarse:h-11">
+              Open full page <ChevronRight size={15} aria-hidden />
+            </Link>
+          </div>
+        </div>
+      )}
+    </li>
+  );
+}
+
 function Block({ title, action, children }: { title: string; action?: React.ReactNode; children: React.ReactNode }) {
   return (
     <section className="border-t border-line-strong pt-4">
@@ -211,7 +293,7 @@ function Unassigned({ ws, onOpen }: { ws: ClientWorkspace; onOpen(r: SheetReques
   if (!initiatives.length && !actions.length) return null;
   return (
     <Card className="mt-6 p-4 sm:p-5">
-      <p className="font-black tracking-tight">Not assigned to a workstream</p>
+      <p className="font-black tracking-tight">Not assigned to an initiative</p>
       {initiatives.length > 0 && (
         <ul className="mt-3 flex flex-col gap-1 text-sm">
           {initiatives.map((i) => (

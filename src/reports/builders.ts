@@ -72,7 +72,7 @@ export function summaryFromRecords(ws: ClientWorkspace, today = todayIso()): str
   const parts = [
     `${ws.client.name} has ${open.length} open action${open.length === 1 ? '' : 's'}${overdue ? `, ${overdue} overdue` : ''}${unowned ? ` and ${unowned} without an accountable owner` : ''}.`,
     `${approved} decision${approved === 1 ? ' is' : 's are'} approved and ${pending} ${pending === 1 ? 'is' : 'are'} pending.`,
-    `${initiatives} initiative${initiatives === 1 ? ' is' : 's are'} proposed or active.`,
+    `${initiatives} action plan${initiatives === 1 ? ' is' : 's are'} proposed or active.`,
     serious ? `${serious} high or critical risk${serious === 1 ? '' : 's'}/issue${serious === 1 ? '' : 's'} require attention.` : 'No high or critical risks or issues are open.',
   ];
   return parts.join(' ');
@@ -130,24 +130,24 @@ export function buildInternalTeamReport(ws: ClientWorkspace, params: { meetingId
             ['Overdue', String(open.filter((a) => isOverdue(a, today)).length)],
             ['Pending decisions', String(pending.length)],
             ['Open risks & issues', String(risks.length)],
-            ['Active initiatives', String(active(ws.initiatives).filter((i) => i.status === 'active').length)],
+            ['Active action plans', String(active(ws.initiatives).filter((i) => i.status === 'active').length)],
           ],
         },
       ],
     },
     { title: 'Major priorities', blocks: [ws.client.strategicPriorities.length ? { type: 'list', items: ws.client.strategicPriorities } : { type: 'paragraph', text: 'No strategic priorities recorded.', muted: true }] },
     {
-      title: 'Workstream updates',
+      title: 'Accountable initiative updates',
       blocks: [
         {
           type: 'table',
-          columns: [{ header: '#', width: 18, align: 'right' }, { header: 'Workstream', width: '*' }, { header: 'Champion', width: 90 }, { header: 'Status', width: 55 }, { header: 'Open actions', width: 55, align: 'right' }, { header: 'Initiatives', width: 52, align: 'right' }, { header: 'Pending decisions', width: 55, align: 'right' }],
+          columns: [{ header: '#', width: 18, align: 'right' }, { header: 'Initiative', width: '*' }, { header: 'Champion', width: 90 }, { header: 'Status', width: 55 }, { header: 'Open actions', width: 55, align: 'right' }, { header: 'Action plans', width: 52, align: 'right' }, { header: 'Pending decisions', width: 55, align: 'right' }],
           rows: streams.map((w) => {
             const acts = open.filter((a) => a.workstreamId === w.id);
             const od = acts.filter((a) => isOverdue(a, today)).length;
             return [String(w.order), w.title, nameOf(ws, w.championId), WORKSTREAM_STATUS_LABELS[w.status], `${acts.length}${od ? ` (${od} overdue)` : ''}`, String(active(ws.initiatives).filter((i) => i.workstreamId === w.id && i.status !== 'complete' && i.status !== 'cancelled').length), String(pending.filter((x) => x.workstreamId === w.id).length)];
           }),
-          empty: 'No workstreams defined.',
+          empty: 'No initiatives defined.',
         },
       ],
     },
@@ -187,10 +187,10 @@ export function buildInternalTeamReport(ws: ClientWorkspace, params: { meetingId
           type: 'table',
           columns: [{ header: 'Area', width: 70 }, { header: 'Name', width: '*' }, { header: 'Champion', width: 110 }, { header: 'Status', width: 70 }],
           rows: [
-            ...streams.map((w) => ['Workstream', w.title, nameOf(ws, w.championId), WORKSTREAM_STATUS_LABELS[w.status]]),
-            ...active(ws.initiatives).filter((i) => i.status !== 'cancelled').map((i) => ['Initiative', i.title, nameOf(ws, i.championId), INITIATIVE_STATUS_LABELS[i.status]]),
+            ...streams.map((w) => ['Initiative', w.title, nameOf(ws, w.championId), WORKSTREAM_STATUS_LABELS[w.status]]),
+            ...active(ws.initiatives).filter((i) => i.status !== 'cancelled').map((i) => ['Action plan', i.title, nameOf(ws, i.championId), INITIATIVE_STATUS_LABELS[i.status]]),
           ],
-          empty: 'No workstreams or initiatives.',
+          empty: 'No initiatives or action plans.',
         },
       ],
     },
@@ -251,7 +251,7 @@ export function buildAccountabilityBrief(ws: ClientWorkspace, params: { personId
             ['Actions owned', String(c.actions.accountable.length)],
             ['Overdue', String(c.overdue)],
             ['Supporting', String(c.actions.supporting.length)],
-            ['Initiatives', String(initiatives.length)],
+            ['Action plans', String(initiatives.length)],
             ['Decisions to resolve', String(c.decisions.owned.length)],
           ],
         },
@@ -260,13 +260,13 @@ export function buildAccountabilityBrief(ws: ClientWorkspace, params: { personId
     { title: 'Actions you are accountable for', blocks: [actionsTable(ws, c.actions.accountable, today, { owner: false, empty: 'No open actions owned.' })] },
     ...(c.actions.supporting.length ? [{ title: 'Actions you are supporting', blocks: [actionsTable(ws, c.actions.supporting, today, { empty: '' })] }] : []),
     {
-      title: 'Assigned initiatives',
+      title: 'Assigned action plans',
       blocks: [
         {
           type: 'table',
-          columns: [{ header: 'Initiative', width: '*' }, { header: 'Role', width: 60 }, { header: 'Target', width: 75 }, { header: 'Status', width: 60 }, { header: 'Desired outcome', width: 150 }],
+          columns: [{ header: 'Action plan', width: '*' }, { header: 'Role', width: 60 }, { header: 'Target', width: 75 }, { header: 'Status', width: 60 }, { header: 'Desired outcome', width: 150 }],
           rows: initiatives.map(({ i, role }) => [i.title, role, d(i.targetDate), INITIATIVE_STATUS_LABELS[i.status], i.desiredOutcome || '—']),
-          empty: 'No active initiatives.',
+          empty: 'No active action plans.',
         },
       ],
     },
@@ -364,15 +364,15 @@ export function buildClientAlignmentReport(ws: ClientWorkspace, _params: Record<
   ];
 
   const excluded = [
-    ['workstreams', notOk(ws.workstreams).length],
-    ['initiatives', notOk(ws.initiatives).length],
+    ['initiatives', notOk(ws.workstreams).length],
+    ['action plans', notOk(ws.initiatives).length],
     ['decisions', notOk(ws.decisions).length],
     ['open actions', notOk(ws.actions).filter((a) => OPEN_ACTION_STATUSES.includes(a.status)).length],
     ['milestones', notOk(ws.milestones).length],
   ].filter(([, n]) => (n as number) > 0);
   const cand = candidates(ws.workstreams) + candidates(ws.initiatives) + candidates(ws.decisions) + candidates(ws.actions) + candidates(ws.milestones);
   const reviewNotes = [
-    excluded.length ? `Excluded because not approved for client release: ${excluded.map(([l, n]) => `${n} ${l}`).join(', ')}.` : 'All workstreams, initiatives, decisions, open actions and milestones are approved for release.',
+    excluded.length ? `Excluded because not approved for client release: ${excluded.map(([l, n]) => `${n} ${l}`).join(', ')}.` : 'All initiatives, action plans, decisions, open actions and milestones are approved for release.',
     ...(cand ? [`${cand} record${cand === 1 ? ' is' : 's are'} marked “Candidate for Client Sharing” — approve individually to include.`] : []),
     'Never included: risks and issues, fees and financial data, readiness assessments, staffing and performance matters, notes, and meeting discussion.',
     `${clientActions.filter((a) => a.commitment !== 'confirmed').length} client item(s) are labeled as proposed requests, ${clientActions.filter((a) => a.commitment === 'confirmed').length} as confirmed commitments.`,

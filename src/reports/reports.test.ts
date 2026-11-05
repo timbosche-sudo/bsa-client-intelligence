@@ -83,7 +83,7 @@ describe('internal reports', () => {
     expect(section(doc, 'Client and meeting')).toBeTruthy();
     const newActions = section(doc, 'New actions from this meeting')!.blocks[0];
     expect(newActions.type === 'table' && newActions.rows[0][2]).toMatch(/overdue/);
-    const ws = section(doc, 'Workstream updates')!.blocks[0];
+    const ws = section(doc, 'Accountable initiative updates')!.blocks[0];
     expect(ws.type === 'table' && ws.rows).toHaveLength(5);
     expect(text(doc)).toContain('Anticipated restart of paused work');
   });

@@ -102,8 +102,8 @@ export function DecisionSheet({ ws, decisionId, defaults, onClose }: DecisionShe
         </FormSection>
 
         <FormSection title="Links">
-          <SelectField label="Workstream" value={x.workstreamId} onChange={(v) => set({ workstreamId: v || null })} placeholder="None" options={withCurrent(o.workstreamOptions, x.workstreamId, 'Archived workstream')} />
-          <SelectField label="Initiative" value={x.initiativeId} onChange={(v) => set({ initiativeId: v || null })} placeholder="None" options={withCurrent(o.initiativeOptions, x.initiativeId, 'Archived initiative')} />
+          <SelectField label="Initiative" value={x.workstreamId} onChange={(v) => set({ workstreamId: v || null })} placeholder="None" options={withCurrent(o.workstreamOptions, x.workstreamId, 'Archived initiative')} />
+          <SelectField label="Action plan" value={x.initiativeId} onChange={(v) => set({ initiativeId: v || null })} placeholder="None" options={withCurrent(o.initiativeOptions, x.initiativeId, 'Archived action plan')} />
           <SelectField label="Related project" value={x.projectId} onChange={(v) => set({ projectId: v || null })} placeholder="None" options={withCurrent(o.projectOptions, x.projectId, 'Archived project')} className="sm:col-span-2" />
         </FormSection>
 

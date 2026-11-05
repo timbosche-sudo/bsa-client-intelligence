@@ -20,8 +20,8 @@ export const REPORT_STATUS: Record<ReportStatus, { label: string; tone: Tone }> 
 };
 
 const TYPES: { kind: ReportKind; icon: typeof FileText; body: string }[] = [
-  { kind: 'internal_team', icon: FileText, body: 'Executive summary, workstream updates, confirmed decisions, risks, new and outstanding actions, champions, milestones and next meeting.' },
-  { kind: 'accountability_brief', icon: UserCheck, body: 'One person’s initiatives, actions, due dates, dependencies, related projects and recent decisions affecting their work.' },
+  { kind: 'internal_team', icon: FileText, body: 'Executive summary, initiative updates, confirmed decisions, risks, new and outstanding actions, champions, milestones and next meeting.' },
+  { kind: 'accountability_brief', icon: UserCheck, body: 'One person’s action plans, actions, due dates, dependencies, related projects and recent decisions affecting their work.' },
   { kind: 'client_alignment', icon: Handshake, body: 'External-facing. Only content approved for client release; proposed requests distinguished from confirmed commitments. Requires approval.' },
   { kind: 'portfolio_readiness', icon: BarChart3, body: 'Inventory, status, milestones, readiness assessments, resource gaps, open decisions, critical risks and recommended actions.' },
 ];

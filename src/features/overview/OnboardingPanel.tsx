@@ -7,7 +7,7 @@ const STEPS: { title: string; to?: string }[] = [
   { title: 'Confirm relationship lead and executive sponsor', to: 'leadership' },
   { title: 'Build the Client Team roster and leadership structure', to: 'leadership' },
   { title: 'Add or import the project portfolio', to: 'portfolio' },
-  { title: 'Define strategic workstreams and initiatives', to: 'workstreams' },
+  { title: 'Define strategic initiatives and action plans', to: 'workstreams' },
   { title: 'Plan the Client Team kickoff meeting', to: 'meetings' },
 ];
 

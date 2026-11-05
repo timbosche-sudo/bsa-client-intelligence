@@ -340,7 +340,7 @@ function RemoveSamplesDialog({ open, summary, onClose, onConfirm, onExport }: { 
           {summary.checklists ? ` and ${summary.checklists} checklist${summary.checklists === 1 ? '' : 's'}` : ''}.
         </p>
         <p>
-          <strong className="text-ink">Everything else is kept:</strong> people and leadership, workstreams, initiatives, actions, decisions, risks, milestones, meetings, reports, and any projects you created or imported.
+          <strong className="text-ink">Everything else is kept:</strong> people and leadership, initiatives, action plans, actions, decisions, risks, milestones, meetings, reports, and any projects you created or imported.
           {summary.unlinked ? ` ${summary.unlinked} of your record${summary.unlinked === 1 ? '' : 's'} linked to a sample project will be kept and unlinked.` : ''}
         </p>
       </div>

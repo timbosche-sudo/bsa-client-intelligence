@@ -382,7 +382,7 @@ function ContextPanel({ ws, m, onOpen }: { ws: ClientWorkspace; m: Meeting; onOp
             </section>
           )}
           <section>
-            <p className="eyebrow mb-2 flex items-center gap-1.5 text-ink"><Target size={13} aria-hidden /> Related initiatives</p>
+            <p className="eyebrow mb-2 flex items-center gap-1.5 text-ink"><Target size={13} aria-hidden /> Related action plans</p>
             {initiatives.length === 0 ? (
               <p className="text-sm text-subtle">None.</p>
             ) : (

@@ -166,7 +166,7 @@ export function MeetingEditorSheet({ ws, meetingId, templateId, suggestedTemplat
           <PeoplePicker label="Attendees" people={o.people} value={m.attendeeIds} onChange={(v) => set({ attendeeIds: v })} />
           <ListField label="Meeting objectives" value={m.objectives} onChange={(v) => set({ objectives: v })} className="sm:col-span-2" />
         </FormSection>
-        <FormSection title="Related workstreams">
+        <FormSection title="Related initiatives">
           <div className="grid gap-2 sm:col-span-2 sm:grid-cols-2">
             {active(ws.workstreams)
               .sort((a, b) => a.order - b.order)

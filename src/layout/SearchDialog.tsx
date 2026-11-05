@@ -15,6 +15,8 @@ const icons: Record<SearchKind, typeof Search> = {
   risk: AlertTriangle,
 };
 
+const KIND_LABELS: Record<SearchKind, string> = { project: 'Project', person: 'Person', workstream: 'Initiative', initiative: 'Action plan', action: 'Action', decision: 'Decision', risk: 'Risk' };
+
 /** Workspace-scoped search: only records of the current client are searchable. */
 export function SearchDialog({ open, onClose, workspace }: { open: boolean; onClose(): void; workspace: ClientWorkspace }) {
   const [q, setQ] = useState('');
@@ -50,7 +52,7 @@ export function SearchDialog({ open, onClose, workspace }: { open: boolean; onCl
             if (e.key === 'ArrowUp') (e.preventDefault(), setCursor((c) => Math.max(c - 1, 0)));
             if (e.key === 'Enter') go(cursor);
           }}
-          placeholder="Projects, people, workstreams, actions…"
+          placeholder="Projects, people, initiatives, actions…"
           aria-label="Search query"
           className="h-12 flex-1 bg-transparent text-base outline-none placeholder:text-subtle"
         />
@@ -79,7 +81,7 @@ export function SearchDialog({ open, onClose, workspace }: { open: boolean; onCl
                       <span className="block truncate text-sm font-medium">{r.title}</span>
                       <span className="block truncate text-xs text-subtle">{r.subtitle}</span>
                     </span>
-                    <span className="text-[10px] uppercase tracking-wide text-subtle">{r.kind}</span>
+                    <span className="text-[10px] uppercase tracking-wide text-subtle">{KIND_LABELS[r.kind]}</span>
                   </button>
                 </li>
               );

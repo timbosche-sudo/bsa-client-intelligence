@@ -47,13 +47,13 @@ export function blankWorkstream(clientId: ID, order: number): Workstream {
 }
 
 export function upsertWorkstream(d: Dataset, w: Workstream): void {
-  if (!w.title.trim()) throw new IntegrityError('A workstream needs a title.');
+  if (!w.title.trim()) throw new IntegrityError('An initiative needs a title.');
   put(d.workstreams, { ...w, title: w.title.trim(), topics: w.topics.map((t) => t.trim()).filter(Boolean) });
 }
 
 export function findWorkstreamReferences(d: Dataset, id: ID): string[] {
   const refs: string[] = [];
-  d.initiatives.filter((x) => x.workstreamId === id).forEach((x) => refs.push(`Initiative "${x.title}"`));
+  d.initiatives.filter((x) => x.workstreamId === id).forEach((x) => refs.push(`Action plan "${x.title}"`));
   d.actions.filter((x) => x.workstreamId === id).forEach((x) => refs.push(`Action "${x.title}"`));
   d.decisions.filter((x) => x.workstreamId === id).forEach((x) => refs.push(`Decision "${x.title}"`));
   d.risks.filter((x) => x.workstreamId === id).forEach((x) => refs.push(`Risk "${x.title}"`));
@@ -69,7 +69,7 @@ export function setWorkstreamArchived(d: Dataset, id: ID, archived: boolean): vo
 
 export function deleteWorkstream(d: Dataset, id: ID): void {
   const refs = findWorkstreamReferences(d, id);
-  if (refs.length) throw new IntegrityError('This workstream has related records. Archive it instead.', refs);
+  if (refs.length) throw new IntegrityError('This initiative has related records. Archive it instead.', refs);
   d.workstreams = d.workstreams.filter((w) => w.id !== id);
 }
 
@@ -90,9 +90,9 @@ export function blankInitiative(clientId: ID, workstreamId: ID | null = null): I
 }
 
 export function upsertInitiative(d: Dataset, i: Initiative): void {
-  if (!i.title.trim()) throw new IntegrityError('An initiative needs a title.');
+  if (!i.title.trim()) throw new IntegrityError('An action plan needs a title.');
   assertClient(d, i.clientId, [
-    { label: 'workstream', id: i.workstreamId, rows: d.workstreams },
+    { label: 'initiative', id: i.workstreamId, rows: d.workstreams },
     ...i.relatedProjectIds.map((id) => ({ label: 'project', id, rows: d.projects })),
   ]);
   put(d.initiatives, { ...i, title: i.title.trim() });
@@ -114,7 +114,7 @@ export function setInitiativeArchived(d: Dataset, id: ID, archived: boolean): vo
 
 export function deleteInitiative(d: Dataset, id: ID): void {
   const refs = findInitiativeReferences(d, id);
-  if (refs.length) throw new IntegrityError('This initiative has related records. Archive it instead.', refs);
+  if (refs.length) throw new IntegrityError('This action plan has related records. Archive it instead.', refs);
   d.initiatives = d.initiatives.filter((x) => x.id !== id);
 }
 
@@ -155,8 +155,8 @@ export function normalizeAction(a: ActionItem): ActionItem {
 export function upsertAction(d: Dataset, a: ActionItem): void {
   if (!a.title.trim()) throw new IntegrityError('An action needs a title.');
   assertClient(d, a.clientId, [
-    { label: 'workstream', id: a.workstreamId, rows: d.workstreams },
-    { label: 'initiative', id: a.initiativeId, rows: d.initiatives },
+    { label: 'initiative', id: a.workstreamId, rows: d.workstreams },
+    { label: 'action plan', id: a.initiativeId, rows: d.initiatives },
     { label: 'project', id: a.projectId, rows: d.projects },
   ]);
   put(d.actions, normalizeAction({ ...a, title: a.title.trim() }));
@@ -223,8 +223,8 @@ export function upsertDecision(d: Dataset, x: Decision): void {
   const errors = validateDecision(d, x);
   if (errors.length) throw new IntegrityError(errors[0], errors);
   assertClient(d, x.clientId, [
-    { label: 'workstream', id: x.workstreamId, rows: d.workstreams },
-    { label: 'initiative', id: x.initiativeId, rows: d.initiatives },
+    { label: 'initiative', id: x.workstreamId, rows: d.workstreams },
+    { label: 'action plan', id: x.initiativeId, rows: d.initiatives },
     { label: 'project', id: x.projectId, rows: d.projects },
   ]);
   // Approval data only accompanies an approved (or later superseded) decision.
@@ -261,8 +261,8 @@ export function blankRisk(clientId: ID, defaults: Partial<Risk> = {}): Risk {
 export function upsertRisk(d: Dataset, r: Risk): void {
   if (!r.title.trim()) throw new IntegrityError('Give the risk, issue or opportunity a title.');
   assertClient(d, r.clientId, [
-    { label: 'workstream', id: r.workstreamId, rows: d.workstreams },
-    { label: 'initiative', id: r.initiativeId, rows: d.initiatives },
+    { label: 'initiative', id: r.workstreamId, rows: d.workstreams },
+    { label: 'action plan', id: r.initiativeId, rows: d.initiatives },
     { label: 'project', id: r.projectId, rows: d.projects },
   ]);
   put(d.risks, { ...r, title: r.title.trim() });

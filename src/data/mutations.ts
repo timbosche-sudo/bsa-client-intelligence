@@ -93,9 +93,9 @@ export function findPersonReferences(d: Dataset, personId: ID): string[] {
     const ids = [b.relationshipPrincipalId, b.pursuitPrincipalId, ...v.seats.map((s) => s.personId)];
     if (ids.includes(personId)) refs.push(`Assigned to project "${p.name}"`);
   });
-  d.workstreams.filter((w) => w.championId === personId).forEach((w) => refs.push(`Champion of workstream "${w.title}"`));
+  d.workstreams.filter((w) => w.championId === personId).forEach((w) => refs.push(`Champion of initiative "${w.title}"`));
   const inRaci = (r: { participantIds: ID[]; consultedIds?: ID[]; informedIds?: ID[] }) => r.participantIds.includes(personId) || !!r.consultedIds?.includes(personId) || !!r.informedIds?.includes(personId);
-  d.initiatives.filter((i) => i.championId === personId || inRaci(i)).forEach((i) => refs.push(`Initiative "${i.title}"`));
+  d.initiatives.filter((i) => i.championId === personId || inRaci(i)).forEach((i) => refs.push(`Action plan "${i.title}"`));
   d.actions.filter((a) => a.ownerId === personId || inRaci(a)).forEach((a) => refs.push(`Action "${a.title}"`));
   d.decisions.filter((x) => x.ownerId === personId || inRaci(x) || x.approval?.approvedById === personId).forEach((x) => refs.push(`Decision "${x.title}"`));
   (d.checklists ?? []).filter((c) => c.items.some((i) => i.ownerId === personId)).forEach((c) => refs.push(`Checklist "${c.templateName}"`));

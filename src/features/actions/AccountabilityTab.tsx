@@ -44,13 +44,13 @@ export function AccountabilityTab({ ws, personId, onPerson, onOpen }: { ws: Clie
           </select>
         </div>
         {people.length === 0 ? (
-          <EmptyState compact title="No one has open commitments yet" className="py-8">Assign owners to actions, initiatives, decisions and risks to see accountability here.</EmptyState>
+          <EmptyState compact title="No one has open commitments yet" className="py-8">Assign owners to actions, action plans, decisions and risks to see accountability here.</EmptyState>
         ) : (
           <table className="w-full min-w-[640px] text-sm">
             <thead>
               <tr className="text-left text-[11px] uppercase tracking-[0.12em] text-subtle">
                 <th className="px-5 py-2 font-normal">Person</th>
-                {['Actions owned', 'Overdue', 'Supporting', 'Initiatives', 'Decisions', 'Risks'].map((h) => <th key={h} className="px-3 py-2 text-right font-normal">{h}</th>)}
+                {['Actions owned', 'Overdue', 'Supporting', 'Action plans', 'Decisions', 'Risks'].map((h) => <th key={h} className="px-3 py-2 text-right font-normal">{h}</th>)}
               </tr>
             </thead>
             <tbody>
@@ -76,13 +76,13 @@ export function AccountabilityTab({ ws, personId, onPerson, onOpen }: { ws: Clie
 
       <Card className="overflow-x-auto">
         <div className="border-b border-line-strong px-4 py-3 sm:px-5">
-          <h2 className="font-black tracking-tight">Outstanding commitments by workstream</h2>
+          <h2 className="font-black tracking-tight">Outstanding commitments by initiative</h2>
         </div>
         <table className="w-full min-w-[640px] text-sm">
           <thead>
             <tr className="text-left text-[11px] uppercase tracking-[0.12em] text-subtle">
-              <th className="px-5 py-2 font-normal">Workstream</th>
-              {['Open actions', 'Overdue', 'Unassigned', 'Initiatives', 'Decisions', 'Risks'].map((h) => <th key={h} className="px-3 py-2 text-right font-normal">{h}</th>)}
+              <th className="px-5 py-2 font-normal">Initiative</th>
+              {['Open actions', 'Overdue', 'Unassigned', 'Action plans', 'Decisions', 'Risks'].map((h) => <th key={h} className="px-3 py-2 text-right font-normal">{h}</th>)}
             </tr>
           </thead>
           <tbody>
@@ -128,7 +128,7 @@ function PersonView({ ws, personId, onPerson, onOpen }: { ws: ClientWorkspace; p
     ['Actions owned', c.actions.accountable.length],
     ['Overdue', c.overdue],
     ['Supporting', c.actions.supporting.length],
-    ['Initiatives championed', c.initiatives.champion.length],
+    ['Action plans championed', c.initiatives.champion.length],
     ['Decisions to resolve', c.decisions.owned.length],
     ['Open risks owned', c.risks.length],
   ] as const;
@@ -178,9 +178,9 @@ function PersonView({ ws, personId, onPerson, onOpen }: { ws: ClientWorkspace; p
         </Section>
       </div>
       <div className="grid gap-6 xl:grid-cols-2">
-        <Section title="Initiatives">
+        <Section title="Action plans">
           {c.initiatives.champion.length + c.initiatives.involved.length === 0 ? (
-            <EmptyState compact title="No active initiatives" className="py-6" />
+            <EmptyState compact title="No active action plans" className="py-6" />
           ) : (
             <ul className="divide-y divide-line">
               {[...c.initiatives.champion.map((i) => [i, 'Champion'] as const), ...c.initiatives.involved.map((i) => [i, 'Involved'] as const)].map(([i, role]) => (

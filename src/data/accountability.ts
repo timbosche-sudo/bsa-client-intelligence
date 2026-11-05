@@ -135,7 +135,7 @@ export function workstreamSummary(ws: ClientWorkspace, today = todayIso()): Work
     };
   };
   const rows = streams.map((w) => row(w.id, w.title, w.order));
-  const none = row(null, 'No workstream', 999);
+  const none = row(null, 'No initiative', 999);
   if (none.openActions + none.activeInitiatives + none.pendingDecisions + none.openRisks > 0) rows.push(none);
   return rows;
 }

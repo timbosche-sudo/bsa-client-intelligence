@@ -19,8 +19,8 @@ export function WorkstreamSheet({ ws, workstreamId, onClose }: { ws: ClientWorks
   const o = useStrategyOptions(ws);
   const set = (patch: Partial<Workstream>) => (setW((x) => ({ ...x, ...patch })), setDirty(true));
   const save = () => {
-    if (!w.title.trim()) return setError('Give the workstream a title.');
-    const r = run((d) => upsertWorkstream(d, w), { clientId: ws.client.id, entity: 'workstream', entityId: w.id, summary: `${existing ? 'Updated' : 'Added'} workstream "${w.title.trim()}"` });
+    if (!w.title.trim()) return setError('Give the initiative a title.');
+    const r = run((d) => upsertWorkstream(d, w), { clientId: ws.client.id, entity: 'workstream', entityId: w.id, summary: `${existing ? 'Updated' : 'Added'} initiative "${w.title.trim()}"` });
     if (r.ok) onClose();
     else setError(r.error ?? '');
   };
@@ -29,21 +29,21 @@ export function WorkstreamSheet({ ws, workstreamId, onClose }: { ws: ClientWorks
       open
       onClose={onClose}
       confirmClose={dirty}
-      title={existing ? 'Edit workstream' : 'New workstream'}
+      title={existing ? 'Edit initiative' : 'New initiative'}
       footer={
         <SheetFooter
           isNew={!existing}
-          noun="workstream"
+          noun="initiative"
           error={error}
           onCancel={onClose}
           onSave={save}
           archived={!!existing?.archivedAt}
           onArchiveToggle={() => {
-            const r = run((d) => setWorkstreamArchived(d, w.id, !existing?.archivedAt), { clientId: ws.client.id, entity: 'workstream', entityId: w.id, summary: `${existing?.archivedAt ? 'Restored' : 'Archived'} workstream "${w.title}"` });
+            const r = run((d) => setWorkstreamArchived(d, w.id, !existing?.archivedAt), { clientId: ws.client.id, entity: 'workstream', entityId: w.id, summary: `${existing?.archivedAt ? 'Restored' : 'Archived'} initiative "${w.title}"` });
             if (r.ok) onClose();
           }}
           onDelete={() => {
-            const r = run((d) => deleteWorkstream(d, w.id), { clientId: ws.client.id, entity: 'workstream', entityId: w.id, summary: `Deleted workstream "${w.title}"` });
+            const r = run((d) => deleteWorkstream(d, w.id), { clientId: ws.client.id, entity: 'workstream', entityId: w.id, summary: `Deleted initiative "${w.title}"` });
             if (r.ok) onClose();
           }}
           deleteBlockers={existing ? findWorkstreamReferences(data, existing.id) : []}
@@ -51,11 +51,11 @@ export function WorkstreamSheet({ ws, workstreamId, onClose }: { ws: ClientWorks
       }
     >
       <div className="flex flex-col gap-8">
-        <FormSection title="Workstream">
+        <FormSection title="Initiative">
           <TextField label="Title" required value={w.title} onChange={(v) => set({ title: v })} className="sm:col-span-2" />
           <TextArea label="Purpose" value={w.purpose} onChange={(v) => set({ purpose: v })} className="sm:col-span-2" />
-          <ListField label="Topics" value={w.topics} onChange={(v) => set({ topics: v })} rows={6} className="sm:col-span-2" />
-          <TextField label="Deliverable" value={w.deliverable} onChange={(v) => set({ deliverable: v })} className="sm:col-span-2" />
+          <ListField label="Focus areas" value={w.topics} onChange={(v) => set({ topics: v })} rows={6} className="sm:col-span-2" />
+          <TextField label="Desired outcome / deliverable" value={w.deliverable} onChange={(v) => set({ deliverable: v })} className="sm:col-span-2" />
           <SelectField label="Accountable champion" value={w.championId} onChange={(v) => set({ championId: v || null })} placeholder="Unassigned" options={withCurrent(o.personOptions, w.championId, 'Inactive person')} />
           <SelectField label="Status" value={w.status} onChange={(v) => set({ status: v as WorkstreamStatus })} options={Object.entries(WORKSTREAM_STATUS_LABELS).filter(([k]) => k !== 'archived').map(([value, label]) => ({ value, label }))} />
         </FormSection>

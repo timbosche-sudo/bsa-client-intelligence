@@ -136,7 +136,7 @@ function ActionsTab({ ws, get, set, onOpen }: FilterProps) {
       return keys
         .map((k) => {
           const w = ws.workstreams.find((x) => x.id === k);
-          return { key: k, title: w ? `${w.order}. ${w.title}` : 'No workstream', order: w?.order ?? 999, items: rows.filter((a) => (a.workstreamId ?? '') === k) };
+          return { key: k, title: w ? `${w.order}. ${w.title}` : 'No initiative', order: w?.order ?? 999, items: rows.filter((a) => (a.workstreamId ?? '') === k) };
         })
         .sort((a, b) => a.order - b.order);
     }
@@ -166,12 +166,12 @@ function ActionsTab({ ws, get, set, onOpen }: FilterProps) {
             {Object.entries(ACTION_STATUS_LABELS).map(([v, l]) => <option key={v} value={v}>Status: {l}</option>)}
           </select>
           <Select label="Owner" value={owner} onChange={(v) => set('owner', v)} options={[{ value: 'none', label: 'Unassigned' }, ...peopleWithActions.map((p) => ({ value: p.id, label: p.fullName }))]} />
-          <Select label="Workstream" value={workstream} onChange={(v) => set('ws', v)} options={[...active(ws.workstreams).sort((a, b) => a.order - b.order).map((w) => ({ value: w.id, label: `${w.order}. ${w.title}` })), { value: 'none', label: 'No workstream' }]} />
+          <Select label="Initiative" value={workstream} onChange={(v) => set('ws', v)} options={[...active(ws.workstreams).sort((a, b) => a.order - b.order).map((w) => ({ value: w.id, label: `${w.order}. ${w.title}` })), { value: 'none', label: 'No initiative' }]} />
           <Select label="Project" value={project} onChange={(v) => set('project', v)} options={active(ws.projects).filter((p) => ws.actions.some((a) => a.projectId === p.id)).map((p) => ({ value: p.id, label: p.name }))} />
           <Select label="Priority" value={priority} onChange={(v) => set('priority', v)} options={Object.entries(PRIORITY_LABELS).map(([value, label]) => ({ value, label }))} />
           <select value={group} onChange={(e) => set('group', e.target.value)} aria-label="Group by" className="h-11 rounded-lg border border-line bg-surface px-3 text-sm">
             <option value="">Group: None</option>
-            <option value="workstream">Group: Workstream</option>
+            <option value="workstream">Group: Initiative</option>
             <option value="owner">Group: Owner</option>
           </select>
         </div>
@@ -183,7 +183,7 @@ function ActionsTab({ ws, get, set, onOpen }: FilterProps) {
             icon={<Download size={15} />}
             onClick={() =>
               downloadCsv(csvFilename(ws.client.name, 'Actions'), [
-                ['Action', 'Description', 'Owner', 'Supporting', 'Due date', 'Overdue', 'Priority', 'Status', 'Commitment', 'Workstream', 'Initiative', 'Project', 'Completed', 'Completion notes', 'Confidentiality'],
+                ['Action', 'Description', 'Owner', 'Supporting', 'Due date', 'Overdue', 'Priority', 'Status', 'Commitment', 'Initiative', 'Action plan', 'Project', 'Completed', 'Completion notes', 'Confidentiality'],
                 ...rows.map((a) => [
                   a.title,
                   a.description,

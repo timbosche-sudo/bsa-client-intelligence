@@ -20,8 +20,8 @@ export function InitiativeSheet({ ws, initiativeId, defaults, onClose, onDeleted
   const o = useStrategyOptions(ws);
   const set = (patch: Partial<Initiative>) => (setX((v) => ({ ...v, ...patch })), setDirty(true));
   const save = () => {
-    if (!x.title.trim()) return setError('Give the initiative a title.');
-    const r = run((d) => upsertInitiative(d, x), { clientId: ws.client.id, entity: 'initiative', entityId: x.id, summary: `${existing ? 'Updated' : 'Added'} initiative "${x.title.trim()}"` });
+    if (!x.title.trim()) return setError('Give the action plan a title.');
+    const r = run((d) => upsertInitiative(d, x), { clientId: ws.client.id, entity: 'initiative', entityId: x.id, summary: `${existing ? 'Updated' : 'Added'} action plan "${x.title.trim()}"` });
     if (r.ok) onClose();
     else setError(r.error ?? '');
   };
@@ -31,22 +31,22 @@ export function InitiativeSheet({ ws, initiativeId, defaults, onClose, onDeleted
       open
       onClose={onClose}
       confirmClose={dirty}
-      title={existing ? 'Edit initiative' : 'New initiative'}
-      description="A strategic effort within a workstream, led by an accountable champion."
+      title={existing ? 'Edit action plan' : 'New action plan'}
+      description="A strategic effort within an initiative, led by an accountable champion."
       footer={
         <SheetFooter
           isNew={!existing}
-          noun="initiative"
+          noun="action plan"
           error={error}
           onCancel={onClose}
           onSave={save}
           archived={!!existing?.archivedAt}
           onArchiveToggle={() => {
-            const r = run((d) => setInitiativeArchived(d, x.id, !existing?.archivedAt), { clientId: ws.client.id, entity: 'initiative', entityId: x.id, summary: `${existing?.archivedAt ? 'Restored' : 'Archived'} initiative "${x.title}"` });
+            const r = run((d) => setInitiativeArchived(d, x.id, !existing?.archivedAt), { clientId: ws.client.id, entity: 'initiative', entityId: x.id, summary: `${existing?.archivedAt ? 'Restored' : 'Archived'} action plan "${x.title}"` });
             if (r.ok) onClose();
           }}
           onDelete={() => {
-            const r = run((d) => deleteInitiative(d, x.id), { clientId: ws.client.id, entity: 'initiative', entityId: x.id, summary: `Deleted initiative "${x.title}"` });
+            const r = run((d) => deleteInitiative(d, x.id), { clientId: ws.client.id, entity: 'initiative', entityId: x.id, summary: `Deleted action plan "${x.title}"` });
             if (r.ok) (onClose(), onDeleted?.());
           }}
           deleteBlockers={existing ? findInitiativeReferences(data, existing.id) : []}
@@ -54,11 +54,11 @@ export function InitiativeSheet({ ws, initiativeId, defaults, onClose, onDeleted
       }
     >
       <div className="flex flex-col gap-8">
-        <FormSection title="Initiative">
+        <FormSection title="Action plan">
           <TextField label="Title" required value={x.title} onChange={(v) => set({ title: v })} className="sm:col-span-2" />
           <TextArea label="Description" value={x.description} onChange={(v) => set({ description: v })} className="sm:col-span-2" />
           <TextArea label="Desired outcome" value={x.desiredOutcome} onChange={(v) => set({ desiredOutcome: v })} rows={2} className="sm:col-span-2" />
-          <SelectField label="Workstream" value={x.workstreamId} onChange={(v) => set({ workstreamId: v || null })} placeholder="None" options={withCurrent(o.workstreamOptions, x.workstreamId, 'Archived workstream')} />
+          <SelectField label="Initiative" value={x.workstreamId} onChange={(v) => set({ workstreamId: v || null })} placeholder="None" options={withCurrent(o.workstreamOptions, x.workstreamId, 'Archived initiative')} />
           <SelectField label="Status" value={x.status} onChange={(v) => set({ status: v as InitiativeStatus })} options={Object.entries(INITIATIVE_STATUS_LABELS).map(([value, label]) => ({ value, label }))} />
           <DateField label="Target date" value={x.targetDate} onChange={(v) => set({ targetDate: v })} />
           <SelectField label="Confidentiality" value={x.confidentiality} onChange={(v) => set({ confidentiality: v as Initiative['confidentiality'] })} options={o.confidentialityOptions} />

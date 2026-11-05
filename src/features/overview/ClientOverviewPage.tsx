@@ -80,7 +80,7 @@ export function ClientOverviewPage() {
             <Panel className="xl:col-span-3" title="Portfolio health" icon={<BarChart3 size={18} />} to={`${base}/portfolio`} linkLabel="Portfolio">
               <PortfolioHealth ws={ws} summary={summary} />
             </Panel>
-            <Panel className="xl:col-span-2" title="Strategic priorities" icon={<Compass size={18} />} to={`${base}/workstreams`} linkLabel="Workstreams">
+            <Panel className="xl:col-span-2" title="Strategic priorities" icon={<Compass size={18} />} to={`${base}/workstreams`} linkLabel="Initiatives">
               {ws.client.strategicPriorities.length ? (
                 <ol className="flex flex-col gap-3">
                   {ws.client.strategicPriorities.map((p, i) => (
@@ -198,7 +198,7 @@ export function ClientOverviewPage() {
                 <EmptyState compact title="No milestones recorded" />
               )}
             </Panel>
-            <Panel title="Innovation & strategic initiatives" icon={<Lightbulb size={18} />} to={`${base}/workstreams`} className="lg:col-span-2 xl:col-span-1">
+            <Panel title="Innovation & strategic action plans" icon={<Lightbulb size={18} />} to={`${base}/workstreams`} className="lg:col-span-2 xl:col-span-1">
               {innovation.length ? (
                 <ul className="flex flex-col divide-y divide-line">
                   {innovation.map((i) => (
@@ -212,7 +212,7 @@ export function ClientOverviewPage() {
                   ))}
                 </ul>
               ) : (
-                <EmptyState compact title="No initiatives yet" />
+                <EmptyState compact title="No action plans yet" />
               )}
             </Panel>
           </div>

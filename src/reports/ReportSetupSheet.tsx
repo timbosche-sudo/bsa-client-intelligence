@@ -25,7 +25,7 @@ export function ReportSetupSheet({ ws, kind, initial, onClose, onCreated }: { ws
   const meetings = active(ws.meetings).filter((m) => m.status !== 'scheduled' && m.status !== 'cancelled').sort((a, b) => meetingTime(b).localeCompare(meetingTime(a)));
   const approvedCounts = useMemo(() => {
     const n = <T extends { confidentiality: string; archivedAt: string | null }>(rows: T[]) => rows.filter((r) => !r.archivedAt && r.confidentiality === 'approved').length;
-    return { workstreams: n(ws.workstreams), initiatives: n(ws.initiatives), decisions: n(ws.decisions), actions: n(ws.actions), milestones: n(ws.milestones) };
+    return { initiatives: n(ws.workstreams), 'action plans': n(ws.initiatives), decisions: n(ws.decisions), actions: n(ws.actions), milestones: n(ws.milestones) };
   }, [ws]);
   const totalApproved = Object.values(approvedCounts).reduce((a, b) => a + b, 0);
 
@@ -106,7 +106,7 @@ export function ReportSetupSheet({ ws, kind, initial, onClose, onCreated }: { ws
                 </div>
               ))}
             </dl>
-            {totalApproved === 0 && <p className="border-l-2 border-bsa-yellow bg-surface-2 px-3 py-2">Nothing is approved for client release yet. Set the confidentiality of workstreams, initiatives, decisions, actions or milestones to “Approved for Client Release” first.</p>}
+            {totalApproved === 0 && <p className="border-l-2 border-bsa-yellow bg-surface-2 px-3 py-2">Nothing is approved for client release yet. Set the confidentiality of initiatives, action plans, decisions, actions or milestones to “Approved for Client Release” first.</p>}
             <Link to={`/c/${ws.client.id}/actions`} onClick={onClose} className="inline-flex min-h-11 items-center self-start font-bold text-accent hover:underline">Review classifications in Actions & Decisions</Link>
           </div>
         )}

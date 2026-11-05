@@ -194,10 +194,10 @@ export function searchWorkspace(ws: ClientWorkspace, query: string, limit = 20):
   });
   active(ws.workstreams).forEach((w) => {
     if (hit(w.title, w.purpose, ...w.topics))
-      results.push({ kind: 'workstream', id: w.id, title: w.title, subtitle: `Workstream ${w.order}`, path: `${base}/workstreams` });
+      results.push({ kind: 'workstream', id: w.id, title: w.title, subtitle: `Initiative ${w.order}`, path: `${base}/workstreams` });
   });
   active(ws.initiatives).forEach((i) => {
-    if (hit(i.title, i.description)) results.push({ kind: 'initiative', id: i.id, title: i.title, subtitle: 'Initiative', path: `${base}/initiatives/${i.id}` });
+    if (hit(i.title, i.description)) results.push({ kind: 'initiative', id: i.id, title: i.title, subtitle: 'Action plan', path: `${base}/initiatives/${i.id}` });
   });
   active(ws.actions).forEach((a) => {
     if (hit(a.title, a.description)) results.push({ kind: 'action', id: a.id, title: a.title, subtitle: 'Action', path: `${base}/actions` });

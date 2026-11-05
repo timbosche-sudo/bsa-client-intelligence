@@ -59,8 +59,8 @@ export function RiskSheet({ ws, riskId, defaults, onClose }: { ws: ClientWorkspa
           <SelectField label="Confidentiality" value={r.confidentiality} onChange={(v) => set({ confidentiality: v as Risk['confidentiality'] })} options={o.confidentialityOptions} />
         </FormSection>
         <FormSection title="Links">
-          <SelectField label="Workstream" value={r.workstreamId} onChange={(v) => set({ workstreamId: v || null })} placeholder="None" options={withCurrent(o.workstreamOptions, r.workstreamId, 'Archived workstream')} />
-          <SelectField label="Initiative" value={r.initiativeId} onChange={(v) => set({ initiativeId: v || null })} placeholder="None" options={withCurrent(o.initiativeOptions, r.initiativeId, 'Archived initiative')} />
+          <SelectField label="Initiative" value={r.workstreamId} onChange={(v) => set({ workstreamId: v || null })} placeholder="None" options={withCurrent(o.workstreamOptions, r.workstreamId, 'Archived initiative')} />
+          <SelectField label="Action plan" value={r.initiativeId} onChange={(v) => set({ initiativeId: v || null })} placeholder="None" options={withCurrent(o.initiativeOptions, r.initiativeId, 'Archived action plan')} />
           <SelectField label="Related project" value={r.projectId} onChange={(v) => set({ projectId: v || null })} placeholder="None" options={withCurrent(o.projectOptions, r.projectId, 'Archived project')} className="sm:col-span-2" />
         </FormSection>
       </div>
