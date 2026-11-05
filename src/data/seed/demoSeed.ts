@@ -30,6 +30,7 @@ import type {
   Workstream,
 } from '@/domain/types';
 import { SCHEMA_VERSION } from '../schema';
+import { DEFAULT_PROJECT_SEAT_ROLES } from '@/domain/defaults';
 
 const SEEDED_AT = '2026-11-03T00:00:00.000Z';
 const base = (id: string, isSample = false): BaseRecord => ({
@@ -188,12 +189,7 @@ function sampleProject(p: {
       anticipatedCompletion: null,
     },
     delivery: {
-      projectExecutiveId: null,
-      projectManagerId: null,
-      designLeaderId: null,
-      planningLeaderId: null,
-      engineeringLeaderId: null,
-      disciplineLeads: [],
+      seats: DEFAULT_PROJECT_SEAT_ROLES.map((role, i) => ({ id: `${p.id}_seat_${i + 1}`, role, personId: null })),
       resourceNotes: '',
       dependencies: [],
     },

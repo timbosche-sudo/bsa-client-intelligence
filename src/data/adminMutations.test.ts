@@ -62,3 +62,23 @@ describe('remove sample data', () => {
     expect(() => removeSampleData(d)).toThrow(/no sample projects/);
   });
 });
+
+import { removeProjectSeat, upsertProjectSeat } from './mutations';
+describe('project leadership seats', () => {
+  it('adds, assigns, renames and removes seats, recording history', () => {
+    const d = createDemoSeed();
+    const p = d.projects[0];
+    expect(p.delivery.seats.map((s) => s.role)).toContain('Operational planner');
+    upsertProjectSeat(d, p.id, { id: 'pseat_x', role: ' Interiors lead ', personId: null }, 'Tester');
+    expect(() => upsertProjectSeat(d, p.id, { id: 'pseat_y', role: 'interiors LEAD', personId: null }, null)).toThrow(/already has/);
+    expect(() => upsertProjectSeat(d, p.id, { id: 'pseat_z', role: ' ', personId: null }, null)).toThrow(/Name the seat/);
+    upsertProjectSeat(d, p.id, { id: 'pseat_x', role: 'Interiors lead', personId: 'person_craig_puccetti' }, 'Tester');
+    let q = d.projects[0];
+    expect(q.delivery.seats.find((s) => s.id === 'pseat_x')).toMatchObject({ role: 'Interiors lead', personId: 'person_craig_puccetti' });
+    expect(q.history.at(-1)!.summary).toMatch(/assigned to Craig Puccetti/);
+    removeProjectSeat(d, p.id, 'pseat_x', 'Tester');
+    q = d.projects[0];
+    expect(q.delivery.seats.some((s) => s.id === 'pseat_x')).toBe(false);
+    expect(q.history.at(-1)!.summary).toMatch(/Removed leadership seat "Interiors lead"/);
+  });
+});

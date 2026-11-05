@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Plus, Trash2 } from 'lucide-react';
+import { newId } from '@/domain/ids';
 import { Button } from '@/components/ui/Button';
 import { Sheet } from '@/components/ui/Sheet';
 import { DateField, FieldError, FormSection, ListField, NumberField, SelectField, TextArea, TextField } from '@/components/form/fields';
@@ -62,7 +63,7 @@ export function ProjectEditSheet({ ws, open, onClose, projectId, onSaved }: Prop
       ...draft,
       name: draft.name.trim(),
       projectNumber: draft.projectNumber?.trim() || null,
-      delivery: { ...draft.delivery, dependencies: draft.delivery.dependencies.map((s) => s.trim()).filter(Boolean), disciplineLeads: draft.delivery.disciplineLeads.filter((l) => l.discipline.trim()) },
+      delivery: { ...draft.delivery, dependencies: draft.delivery.dependencies.map((s) => s.trim()).filter(Boolean), seats: draft.delivery.seats.map((x) => ({ ...x, role: x.role.trim() })).filter((x) => x.role) },
     };
     const dups = findDuplicateProjects(data, ws.client.id, clean.projectNumber, clean.id);
     const errs = validateProject(clean, dups);
@@ -181,24 +182,19 @@ export function ProjectEditSheet({ ws, open, onClose, projectId, onSaved }: Prop
         </fieldset>
 
         <FormSection title="Delivery leadership & resources">
-          <SelectField label="Project executive" value={dv.projectExecutiveId} onChange={(v) => update((p) => void (p.delivery.projectExecutiveId = v || null))} placeholder="Unassigned" options={personOpts} />
-          <SelectField label="Project manager" value={dv.projectManagerId} onChange={(v) => update((p) => void (p.delivery.projectManagerId = v || null))} placeholder="Unassigned" options={personOpts} />
-          <SelectField label="Design leader" value={dv.designLeaderId} onChange={(v) => update((p) => void (p.delivery.designLeaderId = v || null))} placeholder="Unassigned" options={personOpts} />
-          <SelectField label="Planning leader" value={dv.planningLeaderId} onChange={(v) => update((p) => void (p.delivery.planningLeaderId = v || null))} placeholder="Unassigned" options={personOpts} />
-          <SelectField label="Engineering leader" value={dv.engineeringLeaderId} onChange={(v) => update((p) => void (p.delivery.engineeringLeaderId = v || null))} placeholder="Unassigned" options={personOpts} />
           <div className="sm:col-span-2">
-            <p className="mb-2 text-sm font-bold">Discipline leads</p>
+            <p className="mb-2 text-sm font-bold">Leadership seats</p>
             <ul className="flex flex-col gap-2">
-              {dv.disciplineLeads.map((l, i) => (
-                <li key={i} className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
-                  <TextField label="Discipline" value={l.discipline} onChange={(v) => update((p) => void (p.delivery.disciplineLeads[i].discipline = v))} />
-                  <SelectField label="Lead" value={l.personId} onChange={(v) => update((p) => void (p.delivery.disciplineLeads[i].personId = v || null))} placeholder="Unassigned" options={personOpts} />
-                  <Button variant="ghost" iconOnly icon={<Trash2 size={16} />} aria-label="Remove discipline lead" onClick={() => update((p) => void p.delivery.disciplineLeads.splice(i, 1))} />
+              {dv.seats.map((x, i) => (
+                <li key={x.id} className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
+                  <TextField label="Seat / role" value={x.role} onChange={(v) => update((p) => void (p.delivery.seats[i].role = v))} />
+                  <SelectField label="Assigned to" value={x.personId} onChange={(v) => update((p) => void (p.delivery.seats[i].personId = v || null))} placeholder="Unassigned" options={personOpts} />
+                  <Button variant="ghost" iconOnly icon={<Trash2 size={16} />} aria-label={`Remove ${x.role || 'seat'}`} onClick={() => update((p) => void p.delivery.seats.splice(i, 1))} />
                 </li>
               ))}
             </ul>
-            <Button size="sm" className="mt-2" icon={<Plus size={15} />} onClick={() => update((p) => void p.delivery.disciplineLeads.push({ discipline: '', personId: null }))}>
-              Add discipline lead
+            <Button size="sm" className="mt-2" icon={<Plus size={15} />} onClick={() => update((p) => void p.delivery.seats.push({ id: newId('pseat'), role: '', personId: null }))}>
+              Add seat
             </Button>
           </div>
           <TextArea label="Team assignments & resource commitments" value={dv.resourceNotes} onChange={(v) => update((p) => void (p.delivery.resourceNotes = v))} rows={4} className="sm:col-span-2" />

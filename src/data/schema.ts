@@ -3,7 +3,7 @@ import type { Dataset } from '@/domain/types';
 import { hospitalRestartTemplate } from '@/domain/checklistTemplates';
 
 /** Bump when the persisted Dataset shape changes, and add a migration below. */
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 
 /**
  * Structural envelope validation. Deep per-record validation is added with the editing forms
@@ -93,6 +93,30 @@ const migrations: Record<number, Migration> = {
     milestones: (d.milestones as Record<string, unknown>[]).map((m) => ({ confidentiality: 'internal', ...m })),
     // Report records before v5 had no stored content; they cannot be re-exported and are dropped.
     reports: (d.reports as Record<string, unknown>[]).filter((r) => r.content),
+  }),
+  // v5 → v6: project delivery leadership becomes an editable list of seats, and every project gains an
+  // "Operational planner" seat. Existing assignments and discipline leads are carried over unchanged.
+  5: (d) => ({
+    ...d,
+    projects: (d.projects as Record<string, unknown>[]).map((p) => {
+      const v = (p.delivery ?? {}) as Record<string, unknown>;
+      if (Array.isArray(v.seats)) return p;
+      const fixed: [string, unknown][] = [
+        ['Project executive', v.projectExecutiveId],
+        ['Project manager', v.projectManagerId],
+        ['Design leader', v.designLeaderId],
+        ['Planning leader', v.planningLeaderId],
+        ['Engineering leader', v.engineeringLeaderId],
+      ];
+      const leads = ((v.disciplineLeads as { discipline?: string; personId?: string | null }[] | undefined) ?? [])
+        .filter((l) => l.discipline?.trim())
+        .map((l): [string, unknown] => [`${l.discipline!.trim()} lead`, l.personId ?? null]);
+      const rows = [...fixed, ...leads];
+      if (!rows.some(([r]) => r.toLowerCase() === 'operational planner')) rows.push(['Operational planner', null]);
+      const seats = rows.map(([role, personId], i) => ({ id: `${String(p.id)}_seat_${i + 1}`, role, personId: (personId as string | null) ?? null }));
+      const { projectExecutiveId: _a, projectManagerId: _b, designLeaderId: _c, planningLeaderId: _d, engineeringLeaderId: _e, disciplineLeads: _f, ...rest } = v;
+      return { ...p, delivery: { resourceNotes: '', dependencies: [], ...rest, seats } };
+    }),
   }),
 };
 

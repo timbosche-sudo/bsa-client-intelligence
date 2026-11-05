@@ -13,7 +13,7 @@ Your data stays in this browser on this device. Export a backup regularly (see *
 ## Typical cycle
 1. **Overview:** the client's leadership, portfolio summary, upcoming meetings and open commitments.
 2. **Leadership:** maintain people (with headshots), the team structure by tier, and open seats.
-3. **Portfolio:** cards or table, with filters by category, studio and readiness. Open a project for leadership, scope and readiness, milestones, risks and decisions, actions, images and history. Use *Export CSV* for the filtered list.
+3. **Portfolio:** cards or table, with filters by category, studio and readiness. Open a project for leadership (tap a seat to assign, rename or remove it; *Add seat* for extra roles), scope and readiness, milestones, risks and decisions, actions, images and history. Use *Export CSV* for the filtered list.
 4. **Workstreams & initiatives:** strategic topics with champions and a lightweight RACI.
 5. **Actions & decisions:** track owners, due dates and status. *Accountability* shows everything one person owns.
 6. **Meetings:** *New meeting* asks whether to start from a template or a blank agenda. *Start meeting* to facilitate; the **Attendees** tab lets you add people as they join (or add the whole Client Team). *End meeting* to close out, then *Finalize*. Finalized records only change through a recorded amendment.

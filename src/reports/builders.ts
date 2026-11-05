@@ -395,16 +395,7 @@ export function buildPortfolioReadinessReport(ws: ClientWorkspace, params: { cat
   const pname = (id: ID | null) => (id ? (ws.projects.find((p) => p.id === id)?.name ?? '—') : '—');
   const summary = portfolioSummary(ws, { excludeCategories: cats.map((c) => c.id).filter((c) => !params.categories.includes(c)) });
   const dims = [...ws.client.config.readinessDimensions].sort((a, b) => a.order - b.order);
-  const roleGaps = (p: Project) =>
-    [
-      ['Project executive', p.delivery.projectExecutiveId],
-      ['Project manager', p.delivery.projectManagerId],
-      ['Design leader', p.delivery.designLeaderId],
-      ['Planning leader', p.delivery.planningLeaderId],
-      ['Engineering leader', p.delivery.engineeringLeaderId],
-    ]
-      .filter(([, v]) => !v)
-      .map(([l]) => l as string);
+  const roleGaps = (p: Project) => p.delivery.seats.filter((s) => !s.personId).map((s) => s.role);
   const principal = (p: Project) => (p.businessDevelopment.relationshipPrincipalId ? nameOf(ws, p.businessDevelopment.relationshipPrincipalId) : p.businessDevelopment.relationshipPrincipalRaw ?? TBC);
 
   const sections: ReportSection[] = [

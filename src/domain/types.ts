@@ -203,6 +203,13 @@ export interface ProjectSize {
   note: string;
 }
 
+/** A delivery leadership role on one project (e.g. Project manager, Operational planner). */
+export interface ProjectSeat {
+  id: ID;
+  role: string;
+  personId: ID | null;
+}
+
 export interface Project extends BaseRecord, ClientScoped {
   projectNumber: string | null;
   name: string;
@@ -231,12 +238,8 @@ export interface Project extends BaseRecord, ClientScoped {
   };
 
   delivery: {
-    projectExecutiveId: ID | null;
-    projectManagerId: ID | null;
-    designLeaderId: ID | null;
-    planningLeaderId: ID | null;
-    engineeringLeaderId: ID | null;
-    disciplineLeads: { discipline: string; personId: ID | null }[];
+    /** Delivery leadership seats for this project. Seats can be added, renamed, assigned or removed. */
+    seats: ProjectSeat[];
     resourceNotes: string;
     dependencies: string[];
   };

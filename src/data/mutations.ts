@@ -2,9 +2,10 @@
  * Dataset mutations. Pure functions that modify a draft Dataset (used inside store.mutate()).
  * They enforce referential integrity: records with dependent history cannot be deleted, only archived.
  */
-import { defaultClientConfig } from '@/domain/defaults';
+import { DEFAULT_PROJECT_SEAT_ROLES, defaultClientConfig } from '@/domain/defaults';
 import { newId, nowIso } from '@/domain/ids';
 import type {
+  ProjectSeat,
   CategoryDef,
   Dataset,
   ID,
@@ -89,7 +90,7 @@ export function findPersonReferences(d: Dataset, personId: ID): string[] {
   d.projects.forEach((p) => {
     const b = p.businessDevelopment;
     const v = p.delivery;
-    const ids = [b.relationshipPrincipalId, b.pursuitPrincipalId, v.projectExecutiveId, v.projectManagerId, v.designLeaderId, v.planningLeaderId, v.engineeringLeaderId, ...v.disciplineLeads.map((l) => l.personId)];
+    const ids = [b.relationshipPrincipalId, b.pursuitPrincipalId, ...v.seats.map((s) => s.personId)];
     if (ids.includes(personId)) refs.push(`Assigned to project "${p.name}"`);
   });
   d.workstreams.filter((w) => w.championId === personId).forEach((w) => refs.push(`Champion of workstream "${w.title}"`));
@@ -231,12 +232,7 @@ export function blankProject(clientId: ID, categoryId = 'potential'): Project {
       anticipatedCompletion: null,
     },
     delivery: {
-      projectExecutiveId: null,
-      projectManagerId: null,
-      designLeaderId: null,
-      planningLeaderId: null,
-      engineeringLeaderId: null,
-      disciplineLeads: [],
+      seats: defaultProjectSeats(),
       resourceNotes: '',
       dependencies: [],
     },
@@ -246,6 +242,31 @@ export function blankProject(clientId: ID, categoryId = 'potential'): Project {
     provenance: null,
     history: [],
   };
+}
+
+export function defaultProjectSeats(): ProjectSeat[] {
+  return DEFAULT_PROJECT_SEAT_ROLES.map((role) => ({ id: newId('pseat'), role, personId: null }));
+}
+
+/** Adds or updates one delivery leadership seat on a project. */
+export function upsertProjectSeat(d: Dataset, projectId: ID, seat: ProjectSeat, by: string | null): void {
+  const p = d.projects.find((x) => x.id === projectId);
+  if (!p) throw new IntegrityError('Project not found.');
+  const role = seat.role.trim();
+  if (!role) throw new IntegrityError('Name the seat, e.g. "Operational planner".');
+  if (p.delivery.seats.some((s) => s.id !== seat.id && s.role.trim().toLowerCase() === role.toLowerCase())) throw new IntegrityError(`This project already has a "${role}" seat.`);
+  const exists = p.delivery.seats.some((s) => s.id === seat.id);
+  const seats = exists ? p.delivery.seats.map((s) => (s.id === seat.id ? { ...seat, role } : s)) : [...p.delivery.seats, { ...seat, role }];
+  const who = seat.personId ? d.people.find((x) => x.id === seat.personId)?.fullName ?? 'someone' : null;
+  upsertProject(d, { ...p, delivery: { ...p.delivery, seats } }, by, exists ? `Leadership seat "${role}" ${who ? `assigned to ${who}` : 'updated (unassigned)'}.` : `Added leadership seat "${role}"${who ? ` (${who})` : ''}.`);
+}
+
+export function removeProjectSeat(d: Dataset, projectId: ID, seatId: ID, by: string | null): void {
+  const p = d.projects.find((x) => x.id === projectId);
+  if (!p) throw new IntegrityError('Project not found.');
+  const seat = p.delivery.seats.find((s) => s.id === seatId);
+  if (!seat) return;
+  upsertProject(d, { ...p, delivery: { ...p.delivery, seats: p.delivery.seats.filter((s) => s.id !== seatId) } }, by, `Removed leadership seat "${seat.role}".`);
 }
 
 /** Human-readable list of changed top-level fields, for project history. */

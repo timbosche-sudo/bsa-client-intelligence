@@ -30,3 +30,6 @@ export function defaultClientConfig(): ClientConfig {
     ],
   };
 }
+
+/** Delivery leadership seats every new project starts with. Each project can add, rename or remove seats. */
+export const DEFAULT_PROJECT_SEAT_ROLES = ['Project executive', 'Project manager', 'Design leader', 'Planning leader', 'Engineering leader', 'Operational planner'] as const;

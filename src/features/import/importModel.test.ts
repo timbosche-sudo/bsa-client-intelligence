@@ -180,7 +180,7 @@ describe('stable-id matching and shared project numbers', () => {
     p.readiness[dim] = { status: 'ready', note: 'Confirmed', assessedById: 'person_craig_puccetti', assessedAt: '2026-11-02T00:00:00.000Z' };
     p.overallReadiness = { status: 'partially_ready', note: 'Leader view', assessedById: 'person_craig_puccetti', assessedAt: '2026-11-02T00:00:00.000Z' };
     p.imageIds = ['media_x'];
-    p.delivery.projectManagerId = 'person_craig_puccetti';
+    p.delivery.seats[1].personId = 'person_craig_puccetti';
     d.actions[0].projectId = p.id;
 
     const preview = seedPreview(d, file([rec('src-base', '9999-0004', 'Spring base scope', 5000), rec('src-dco', '9999-0004', 'Spring DCO 02 (2028)', 550), rec('src-new', '9999-0099', 'New clinic', 100)]));
@@ -201,7 +201,7 @@ describe('stable-id matching and shared project numbers', () => {
     expect(after.businessDevelopment.bsaFee).toBe(550);
     expect(after.overallReadiness.status).toBe('partially_ready');
     expect(after.readiness[dim].status).toBe('ready');
-    expect(after.delivery.projectManagerId).toBe('person_craig_puccetti');
+    expect(after.delivery.seats[1].personId).toBe('person_craig_puccetti');
     expect(d.actions[0].projectId).toBe(p.id);
     expect(d.projects.filter((x) => x.projectNumber === '9999-0004')).toHaveLength(2);
 

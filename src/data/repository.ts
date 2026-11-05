@@ -62,8 +62,7 @@ export function getWorkspace(data: Dataset, clientId: ID): ClientWorkspace {
   slice.meetings.forEach((m) => (add(m.facilitatorId), m.attendeeIds.forEach(add)));
   slice.projects.forEach((p) => {
     const d = p.delivery;
-    [p.businessDevelopment.relationshipPrincipalId, p.businessDevelopment.pursuitPrincipalId, d.projectExecutiveId, d.projectManagerId, d.designLeaderId, d.planningLeaderId, d.engineeringLeaderId].forEach(add);
-    d.disciplineLeads.forEach((l) => add(l.personId));
+    [p.businessDevelopment.relationshipPrincipalId, p.businessDevelopment.pursuitPrincipalId, ...d.seats.map((s) => s.personId)].forEach(add);
   });
 
   const people = data.people.filter((p) => referenced.has(p.id) || p.homeClientId === clientId);

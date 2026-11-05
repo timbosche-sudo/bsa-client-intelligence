@@ -29,7 +29,7 @@ describe('v1 → v2 migration', () => {
     (v1.people as Record<string, unknown>[]).forEach((p) => delete p.homeClientId);
     (v1.projects as Record<string, unknown>[]).forEach((p) => delete p.documentLinks);
     const migrated = migrate(v1);
-    expect(migrated.schemaVersion).toBe(5);
+    expect(migrated.schemaVersion).toBe(SCHEMA_VERSION);
     expect(migrated.media).toEqual([]);
     expect(migrated.people.every((p) => p.homeClientId === null)).toBe(true);
     expect(migrated.projects.every((p) => Array.isArray(p.documentLinks))).toBe(true);
@@ -46,7 +46,7 @@ describe('v2 → v3 migration', () => {
     for (const k of ['initiatives', 'actions', 'decisions']) (v2[k] as Record<string, unknown>[]).forEach((r) => (delete r.consultedIds, delete r.informedIds));
     (v2.risks as Record<string, unknown>[]).forEach((r) => delete r.initiativeId);
     const m = migrate(v2);
-    expect(m.schemaVersion).toBe(5);
+    expect(m.schemaVersion).toBe(SCHEMA_VERSION);
     expect(m.actions.every((a) => Array.isArray(a.consultedIds) && Array.isArray(a.informedIds))).toBe(true);
     expect(m.risks.every((r) => r.initiativeId === null)).toBe(true);
     expect(m.checklistTemplates.map((t) => t.items.length)).toEqual([8]);
@@ -62,7 +62,7 @@ describe('v3 → v4 migration', () => {
     (v3.meetingTemplates as Record<string, unknown>[]).forEach((t) => delete t.objectives);
     v3.meetings = [{ id: 'm1', clientId: 'client_houston_methodist', title: 'Old', startsAt: null, facilitatorId: null, attendeeIds: [], objectives: [], workstreamIds: [], templateId: null, agenda: [], notes: {}, status: 'scheduled', finalizedAt: null, finalizedById: null, createdAt: '', updatedAt: '', archivedAt: null }];
     const m = migrate(v3);
-    expect(m.schemaVersion).toBe(5);
+    expect(m.schemaVersion).toBe(SCHEMA_VERSION);
     expect(m.risks.every((r) => r.meetingId === null)).toBe(true);
     expect(m.meetings[0]).toMatchObject({ title: 'Old', agendaState: {}, amendments: [], record: null, carryoverActionIds: [] });
     expect(m.meetingTemplates.every((t) => Array.isArray(t.objectives))).toBe(true);
@@ -77,7 +77,7 @@ describe('v4 → v5 migration', () => {
     (v4.milestones as Record<string, unknown>[]).forEach((x) => delete x.confidentiality);
     v4.reports = [{ id: 'r1', clientId: 'client_houston_methodist' }];
     const m = migrate(v4);
-    expect(m.schemaVersion).toBe(5);
+    expect(m.schemaVersion).toBe(SCHEMA_VERSION);
     expect(m.actions.every((a) => a.commitment === 'proposed')).toBe(true);
     expect(m.milestones.every((x) => x.confidentiality === 'internal')).toBe(true);
     expect(m.reports).toEqual([]);
@@ -95,5 +95,21 @@ describe('LocalStorageAdapter', () => {
     expect(await adapter.usage()).toBeGreaterThan(0);
     await adapter.clear();
     expect(await adapter.load()).toBeNull();
+  });
+});
+
+describe('v5 → v6 project leadership seats', () => {
+  it('carries over assignments and discipline leads and adds an Operational planner seat', () => {
+    const d = createDemoSeed() as unknown as Record<string, unknown>;
+    const projects = d.projects as Record<string, unknown>[];
+    projects[0].delivery = { projectExecutiveId: 'person_craig_puccetti', projectManagerId: null, designLeaderId: null, planningLeaderId: null, engineeringLeaderId: null, disciplineLeads: [{ discipline: 'Interiors', personId: 'person_craig_puccetti' }, { discipline: ' ', personId: null }], resourceNotes: 'Notes', dependencies: ['X'] };
+    const m = migrate({ ...d, schemaVersion: 5 });
+    const seats = m.projects[0].delivery.seats;
+    expect(seats.map((s) => s.role)).toEqual(['Project executive', 'Project manager', 'Design leader', 'Planning leader', 'Engineering leader', 'Interiors lead', 'Operational planner']);
+    expect(seats[0].personId).toBe('person_craig_puccetti');
+    expect(seats[5].personId).toBe('person_craig_puccetti');
+    expect(new Set(seats.map((s) => s.id)).size).toBe(seats.length);
+    expect(m.projects[0].delivery).toMatchObject({ resourceNotes: 'Notes', dependencies: ['X'] });
+    expect('projectExecutiveId' in m.projects[0].delivery).toBe(false);
   });
 });
