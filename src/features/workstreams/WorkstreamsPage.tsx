@@ -44,8 +44,8 @@ export function WorkstreamsPage() {
     <>
       <PageHeader
         eyebrow={ws.client.name}
-        title="Strategic Workstreams"
-        description="Delivery preparedness and proactive client value, organized into accountable workstreams and initiatives."
+        title="Accountable Initiatives"
+        description="Internal initiatives ensure readiness and consistency, while external initiatives drive proactive client value."
         actions={
           <>
             <label className="flex h-11 items-center gap-2 rounded-lg border border-line px-3 text-sm text-muted">

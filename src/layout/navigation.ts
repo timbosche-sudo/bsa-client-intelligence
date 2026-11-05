@@ -21,7 +21,7 @@ export const NAV_ITEMS: NavItem[] = [
   { path: 'overview', label: 'Client Overview', short: 'Overview', icon: LayoutDashboard },
   { path: 'leadership', label: 'Leadership', short: 'Leadership', icon: Users },
   { path: 'portfolio', label: 'Portfolio Readiness', short: 'Portfolio', icon: BarChart3 },
-  { path: 'workstreams', label: 'Strategic Workstreams', short: 'Workstreams', icon: Layers },
+  { path: 'workstreams', label: 'Accountable Initiatives', short: 'Initiatives', icon: Layers },
   { path: 'meetings', label: 'Meetings', short: 'Meetings', icon: CalendarClock },
   { path: 'actions', label: 'Actions & Decisions', short: 'Actions', icon: ClipboardCheck },
   { path: 'reports', label: 'Reports', short: 'Reports', icon: FileText },
