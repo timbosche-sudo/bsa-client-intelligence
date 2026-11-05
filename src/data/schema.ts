@@ -3,7 +3,7 @@ import type { Dataset } from '@/domain/types';
 import { hospitalRestartTemplate } from '@/domain/checklistTemplates';
 
 /** Bump when the persisted Dataset shape changes, and add a migration below. */
-export const SCHEMA_VERSION = 6;
+export const SCHEMA_VERSION = 7;
 
 /**
  * Structural envelope validation. Deep per-record validation is added with the editing forms
@@ -118,6 +118,28 @@ const migrations: Record<number, Migration> = {
       return { ...p, delivery: { resourceNotes: '', dependencies: [], ...rest, seats } };
     }),
   }),
+  // v6 → v7: renamed leadership groups 3–5. Only tiers still carrying the original default wording are renamed;
+  // any label or description a user has edited is left untouched.
+  6: (d) => {
+    const renames: Record<string, { from: [string, string]; to: [string, string] }> = {
+      portfolio: { from: ['Portfolio Delivery Leadership', 'Oversight of delivery quality, staffing and coordination across projects.'], to: ['Strategic Delivery Oversight', 'Ensuring project alignment and resource strategy.'] },
+      project: { from: ['Project Leadership', 'Principals-in-charge and project managers for individual projects.'], to: ['Key Project Leadership', 'Anchor leaders who are well-known to clients on key projects.'] },
+      discipline: { from: ['Discipline & Technical Leadership', 'Design, planning, engineering and interiors technical leads.'], to: ['Cross-Project Technical Leadership', 'Technical experts ensuring firmwide standards and consistency.'] },
+    };
+    return {
+      ...d,
+      clients: (d.clients as Record<string, unknown>[]).map((c) => {
+        const cfg = c.config as { leadershipTiers?: { id: string; label: string; description: string }[] } | undefined;
+        if (!cfg?.leadershipTiers) return c;
+        const leadershipTiers = cfg.leadershipTiers.map((t) => {
+          const r = renames[t.id];
+          if (!r) return t;
+          return { ...t, label: t.label === r.from[0] ? r.to[0] : t.label, description: t.description === r.from[1] ? r.to[1] : t.description };
+        });
+        return { ...c, config: { ...cfg, leadershipTiers } };
+      }),
+    };
+  },
 };
 
 export class SchemaError extends Error {}

@@ -16,9 +16,9 @@ export function defaultClientConfig(): ClientConfig {
     leadershipTiers: [
       { id: 'executive', label: 'Executive Sponsorship', order: 1, description: 'Firm-level sponsorship, escalation authority and resource commitment.' },
       { id: 'relationship', label: 'Client Relationship Leadership', order: 2, description: 'Primary owner of the client relationship and strategic dialogue.' },
-      { id: 'portfolio', label: 'Portfolio Delivery Leadership', order: 3, description: 'Oversight of delivery quality, staffing and coordination across projects.' },
-      { id: 'project', label: 'Project Leadership', order: 4, description: 'Principals-in-charge and project managers for individual projects.' },
-      { id: 'discipline', label: 'Discipline & Technical Leadership', order: 5, description: 'Design, planning, engineering and interiors technical leads.' },
+      { id: 'portfolio', label: 'Strategic Delivery Oversight', order: 3, description: 'Ensuring project alignment and resource strategy.' },
+      { id: 'project', label: 'Key Project Leadership', order: 4, description: 'Anchor leaders who are well-known to clients on key projects.' },
+      { id: 'discipline', label: 'Cross-Project Technical Leadership', order: 5, description: 'Technical experts ensuring firmwide standards and consistency.' },
     ],
     readinessDimensions: [
       { id: 'leadership', label: 'Leadership', order: 1, guidance: 'Accountable principal, PM and design leadership are confirmed and available.' },

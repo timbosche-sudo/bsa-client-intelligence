@@ -113,3 +113,20 @@ describe('v5 → v6 project leadership seats', () => {
     expect('projectExecutiveId' in m.projects[0].delivery).toBe(false);
   });
 });
+
+describe('v6 → v7 leadership group names', () => {
+  it('renames groups 3–5 only where the original wording is unchanged', () => {
+    const d = structuredClone(createDemoSeed()) as unknown as { clients: { config: { leadershipTiers: { id: string; label: string; description: string }[] } }[] } & Record<string, unknown>;
+    const tiers = d.clients[0].config.leadershipTiers;
+    const set = (id: string, label: string, description: string) => Object.assign(tiers.find((t) => t.id === id)!, { label, description });
+    set('portfolio', 'Portfolio Delivery Leadership', 'Oversight of delivery quality, staffing and coordination across projects.');
+    set('project', 'Project Leadership', 'Principals-in-charge and project managers for individual projects.');
+    set('discipline', 'My custom name', 'Design, planning, engineering and interiors technical leads.');
+    const m = migrate({ ...d, schemaVersion: 6 });
+    const byId = Object.fromEntries(m.clients[0].config.leadershipTiers.map((t) => [t.id, t]));
+    expect(byId.portfolio).toMatchObject({ label: 'Strategic Delivery Oversight', description: 'Ensuring project alignment and resource strategy.' });
+    expect(byId.project).toMatchObject({ label: 'Key Project Leadership', description: 'Anchor leaders who are well-known to clients on key projects.' });
+    expect(byId.discipline).toMatchObject({ label: 'My custom name', description: 'Technical experts ensuring firmwide standards and consistency.' });
+    expect(byId.executive.label).toBe('Executive Sponsorship');
+  });
+});
