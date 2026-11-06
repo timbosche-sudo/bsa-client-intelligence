@@ -211,6 +211,7 @@ export function AdminPage() {
             <EnvRow label="Data storage" value="Browser-local, unencrypted, not synchronized" warn />
             <EnvRow label="AI services" value={environment.aiEnabled ? 'Enabled' : 'Disabled — no data leaves this browser'} />
             <EnvRow label="App version" value={environment.appVersion} />
+            <EnvRow label="Build" value={`${formatDateTime(__BUILD_TIME__)} · ${__BUILD_COMMIT__}`} />
           </ul>
         </Panel>
 

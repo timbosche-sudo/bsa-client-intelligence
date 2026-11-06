@@ -21,6 +21,10 @@ const stampServiceWorker = (): Plugin => ({
 export default defineConfig({
   base: './',
   plugins: [react(), tailwindcss(), stampServiceWorker()],
+  define: {
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+    __BUILD_COMMIT__: JSON.stringify((process.env.GITHUB_SHA ?? 'local').slice(0, 7)),
+  },
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },

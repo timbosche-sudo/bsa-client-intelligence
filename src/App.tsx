@@ -1,3 +1,4 @@
+import { UpdateBanner } from '@/components/ui/UpdateBanner';
 import { lazy, Suspense, useEffect, type ComponentType, type ReactNode } from 'react';
 import { createHashRouter, Navigate, RouterProvider, useRouteError, Link } from 'react-router-dom';
 import { AlertTriangle, Loader2 } from 'lucide-react';
@@ -135,6 +136,7 @@ export default function App() {
     <>
       <RouterProvider router={router} />
       <Toaster />
+      <UpdateBanner />
     </>
   );
 }
