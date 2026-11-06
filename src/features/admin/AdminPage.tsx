@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Building2, Database, Download, Eraser, History, ListChecks, ListOrdered, Pencil, SlidersHorizontal, Plus, RotateCcw, ShieldAlert, Sparkles, Upload } from 'lucide-react';
+import { Building2, Database, Download, Eraser, FolderOpen, History, ListChecks, ListOrdered, Pencil, SlidersHorizontal, Plus, RotateCcw, ShieldAlert, Sparkles, Upload } from 'lucide-react';
 import { z } from 'zod';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -13,6 +13,7 @@ import { CLIENT_STATUS_LABELS } from '@/domain/labels';
 import { listClients } from '@/data/repository';
 import { Monogram } from '@/layout/ClientSelector';
 import { exportFullBackup } from '@/services/exportBackup';
+import { canChooseLocation, chooseBackupFolder, clearBackupFolder, getBackupFolder } from '@/services/backupLocation';
 import { formatBytes, formatDateTime } from '@/lib/format';
 import { useDataStore } from '@/state/store';
 import { useRequiredWorkspace } from '@/state/useWorkspace';
@@ -171,6 +172,8 @@ export function AdminPage() {
             <dd>{data.origin === 'demo-seed' ? 'Built-in demonstration data' : data.origin === 'restored' ? 'Restored from backup' : 'Empty workspace'}</dd>
             <dt className="text-subtle">Schema</dt>
             <dd className="tabular">v{data.schemaVersion}</dd>
+            <dt className="text-subtle">Backup location</dt>
+            <dd><BackupLocation /></dd>
             <dt className="text-subtle">Images</dt>
             <dd className="tabular">
               {media ? `${media.count} stored${media.orphans.length ? ` (${media.orphans.length} unreferenced)` : ''}` : '…'}
@@ -346,6 +349,42 @@ function RemoveSamplesDialog({ open, summary, onClose, onConfirm, onExport }: { 
         </p>
       </div>
     </Dialog>
+  );
+}
+
+function BackupLocation() {
+  const supported = canChooseLocation();
+  const [folder, setFolder] = useState<string | null | undefined>(undefined);
+  useEffect(() => {
+    void getBackupFolder().then((h) => setFolder(h?.name ?? null));
+  }, []);
+  if (!supported) return <span className="text-muted">Your browser’s download location (this browser can’t choose a folder; Chrome or Edge on a computer can).</span>;
+  const choose = async () => {
+    try {
+      const name = await chooseBackupFolder();
+      if (name) {
+        setFolder(name);
+        toast(`Backups will be saved to “${name}”.`);
+      }
+    } catch (e) {
+      toast(`Couldn’t use that folder: ${e instanceof Error ? e.message : String(e)}`, 'error');
+    }
+  };
+  const clear = async () => {
+    await clearBackupFolder();
+    setFolder(null);
+    toast('Backups will ask where to save each time.');
+  };
+  return (
+    <div className="flex flex-col gap-2">
+      <span>
+        {folder === undefined ? '…' : folder ? <>Folder <strong className="font-bold">“{folder}”</strong>. Exports save there directly; Chrome asks you to allow access once per session.</> : 'Ask where to save each time. The dialog opens in the folder you used last.'}
+      </span>
+      <span className="flex flex-wrap gap-2">
+        <Button size="sm" icon={<FolderOpen size={15} aria-hidden />} onClick={() => void choose()}>{folder ? 'Change folder…' : 'Choose backup folder…'}</Button>
+        {folder && <Button size="sm" variant="ghost" onClick={() => void clear()}>Ask each time instead</Button>}
+      </span>
+    </div>
   );
 }
 

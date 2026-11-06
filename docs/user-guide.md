@@ -31,6 +31,7 @@ Internal performance matters belong in internal notes only, and are never includ
 
 ## Data & backup (Administration)
 - **Export backup (JSON):** every workspace and image in this browser. Treat the file as confidential.
+- **Backup location** (Chrome or Edge on a computer): choose a backup folder once and exports save straight into it (Chrome asks you to allow access once per session), or leave it unset to get a Save dialog that opens in the folder you used last. On iPad and Safari, backups use the normal download or share sheet.
 - **Restore from backup:** choose a file to see a validation report and a per-client preview of what will be added, replaced or removed. Export the current data first, confirm, then *Replace all data*. Files from newer app versions, and the raw portfolio seed file, are refused.
 - **Remove sample data:** permanently removes the fictional sample projects (marked *Sample*) and their images. People, leadership, initiatives, action plans, actions, decisions, meetings, reports, and projects you created or imported are kept. Records that were linked to a sample project are kept and unlinked. The button disappears once no samples remain.
 - **Reset to demo data:** replaces everything with the fictional demo set.
