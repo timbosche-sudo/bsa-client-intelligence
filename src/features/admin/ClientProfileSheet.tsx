@@ -66,7 +66,7 @@ export function ClientProfileSheet({ client, currentClientId, onClose }: { clien
           <SelectField label="Status" value={c.status} onChange={(v) => set({ status: v as ClientStatus })} options={Object.entries(CLIENT_STATUS_LABELS).map(([value, label]) => ({ value, label }))} />
         </FormSection>
         <FormSection title="Strategic profile">
-          <TextArea label="Summary" rows={4} value={c.summary} onChange={(v) => set({ summary: v })} className="sm:col-span-2" hint="Internal. Not included in client-facing reports." />
+          <TextArea label="Why we’re here" rows={5} value={c.summary} onChange={(v) => set({ summary: v })} className="sm:col-span-2" hint="Shown on the Client Overview. Leave a blank line between paragraphs. Internal; not included in client-facing reports." />
           <ListField label="Strategic priorities" value={c.strategicPriorities} onChange={(v) => set({ strategicPriorities: v })} rows={5} className="sm:col-span-2" />
         </FormSection>
       </div>

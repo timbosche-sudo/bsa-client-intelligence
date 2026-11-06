@@ -3,7 +3,7 @@ import type { Dataset } from '@/domain/types';
 import { hospitalRestartTemplate } from '@/domain/checklistTemplates';
 
 /** Bump when the persisted Dataset shape changes, and add a migration below. */
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 
 /**
  * Structural envelope validation. Deep per-record validation is added with the editing forms
@@ -140,6 +140,15 @@ const migrations: Record<number, Migration> = {
       }),
     };
   },
+  // v7 → v8: new Houston Methodist "Why we're here" statement, replacing the original placeholder summary only if unedited.
+  7: (d) => ({
+    ...d,
+    clients: (d.clients as Record<string, unknown>[]).map((c) =>
+      c.id === 'client_houston_methodist' && c.summary === 'Long-standing healthcare client. Several initiatives were paused for client budgeting and planning; significant work may restart in 2027. The Client Team is preparing leadership, resources and new ideas ahead of that restart.'
+        ? { ...c, summary: 'To bring the full strength of BSA to Houston Methodist through intentional leadership, clear accountability, and proactive partnership.\n\nBy aligning our people, anticipating challenges, and advancing new ideas, we can deliver exceptional projects, strengthen client confidence, and create lasting value.' }
+        : c,
+    ),
+  }),
 };
 
 export class SchemaError extends Error {}

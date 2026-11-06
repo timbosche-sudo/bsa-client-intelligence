@@ -57,7 +57,7 @@ const clients: Client[] = [
     sector: 'Healthcare — academic medical system',
     monogram: 'HM',
     summary:
-      'Long-standing healthcare client. Several initiatives were paused for client budgeting and planning; significant work may restart in 2027. The Client Team is preparing leadership, resources and new ideas ahead of that restart.',
+      'To bring the full strength of BSA to Houston Methodist through intentional leadership, clear accountability, and proactive partnership.\n\nBy aligning our people, anticipating challenges, and advancing new ideas, we can deliver exceptional projects, strengthen client confidence, and create lasting value.',
     strategicPriorities: [
       'Establish clear vertical leadership and accountability before projects restart',
       'Prepare portfolio, staffing and resources for anticipated 2027 restarts',

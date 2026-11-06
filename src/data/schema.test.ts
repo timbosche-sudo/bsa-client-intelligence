@@ -130,3 +130,15 @@ describe('v6 → v7 leadership group names', () => {
     expect(byId.executive.label).toBe('Executive Sponsorship');
   });
 });
+
+describe('v7 → v8 Houston Methodist statement', () => {
+  it('replaces only the unedited original summary', () => {
+    const OLD = 'Long-standing healthcare client. Several initiatives were paused for client budgeting and planning; significant work may restart in 2027. The Client Team is preparing leadership, resources and new ideas ahead of that restart.';
+    const d = structuredClone(createDemoSeed()) as unknown as { clients: { id: string; summary: string }[] } & Record<string, unknown>;
+    d.clients.find((c) => c.id === 'client_houston_methodist')!.summary = OLD;
+    const m = migrate({ ...d, schemaVersion: 7 });
+    expect(m.clients.find((c) => c.id === 'client_houston_methodist')!.summary).toMatch(/^To bring the full strength of BSA to Houston Methodist[\s\S]*\n\nBy aligning our people/);
+    d.clients.find((c) => c.id === 'client_houston_methodist')!.summary = 'My own words';
+    expect(migrate({ ...d, schemaVersion: 7 }).clients.find((c) => c.id === 'client_houston_methodist')!.summary).toBe('My own words');
+  });
+});

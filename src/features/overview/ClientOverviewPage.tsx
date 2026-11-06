@@ -238,7 +238,14 @@ function Hero({ ws, onStartMeeting }: { ws: ClientWorkspace; onStartMeeting(): v
           </div>
           <h1 className="text-3xl font-black tracking-tight sm:text-[40px] sm:leading-tight">{ws.client.name}</h1>
           {ws.client.sector && <p className="mt-1.5 text-sm text-subtle">{ws.client.sector}</p>}
-          {ws.client.summary && <p className="mt-4 max-w-3xl text-sm leading-relaxed text-muted sm:text-[15px]">{ws.client.summary}</p>}
+          {ws.client.summary && (
+            <section aria-labelledby="why-here" className="mt-5 max-w-3xl">
+              <h2 id="why-here" className="eyebrow mb-2">Why we’re here</h2>
+              {ws.client.summary.split(/\n\s*\n/).map((para, i) => (
+                <p key={i} className="mt-2 whitespace-pre-line text-sm leading-relaxed text-muted first:mt-0 sm:text-[15px]">{para.trim()}</p>
+              ))}
+            </section>
+          )}
 
           <div className="mt-6 flex flex-wrap gap-x-8 gap-y-4">
             <div className="flex items-center gap-3">
