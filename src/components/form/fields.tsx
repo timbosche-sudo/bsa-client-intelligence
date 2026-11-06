@@ -1,4 +1,4 @@
-import { useId, type ReactNode, type InputHTMLAttributes, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { useId, useRef, useState, type ReactNode, type InputHTMLAttributes, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
@@ -142,7 +142,20 @@ export function Toggle({ label, description, checked, onChange }: { label: strin
 }
 
 /** Edits a string[] as one item per line. */
+/** Parses one-item-per-line text: trailing spaces trimmed, blank lines dropped. */
+export const parseListText = (text: string): string[] => text.split('\n').map((s) => s.replace(/\s+$/, '')).filter((s) => s.trim() !== '');
+
+/**
+ * One item per line. The textarea keeps exactly what the user types (spaces, blank lines) so the cursor never
+ * jumps; the parent receives the cleaned list. Text is only replaced when the value changes from outside.
+ */
 export function ListField({ label, hint, error, className, value, onChange, rows = 4, placeholder }: Base & { value: string[]; onChange(v: string[]): void; rows?: number; placeholder?: string }) {
+  const [text, setText] = useState(() => value.join('\n'));
+  const lastSent = useRef<string[]>(value);
+  if (JSON.stringify(value) !== JSON.stringify(lastSent.current) && JSON.stringify(value) !== JSON.stringify(parseListText(text))) {
+    lastSent.current = value;
+    setText(value.join('\n'));
+  }
   return (
     <TextArea
       label={label}
@@ -151,8 +164,13 @@ export function ListField({ label, hint, error, className, value, onChange, rows
       className={className}
       rows={rows}
       placeholder={placeholder}
-      value={value.join('\n')}
-      onChange={(v) => onChange(v.split('\n').map((s) => s.replace(/\s+$/, '')).filter((s, i, arr) => s.trim() !== '' || i === arr.length - 1))}
+      value={text}
+      onChange={(v) => {
+        setText(v);
+        const list = parseListText(v);
+        lastSent.current = list;
+        onChange(list);
+      }}
     />
   );
 }
