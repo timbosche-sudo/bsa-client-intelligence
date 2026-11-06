@@ -1,4 +1,4 @@
-import { useId, useRef, useState, type ReactNode, type InputHTMLAttributes, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
+import { useEffect, useId, useRef, type ReactNode, type InputHTMLAttributes, type SelectHTMLAttributes, type TextareaHTMLAttributes } from 'react';
 import { AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
@@ -146,32 +146,39 @@ export function Toggle({ label, description, checked, onChange }: { label: strin
 export const parseListText = (text: string): string[] => text.split('\n').map((s) => s.replace(/\s+$/, '')).filter((s) => s.trim() !== '');
 
 /**
- * One item per line. The textarea keeps exactly what the user types (spaces, blank lines) so the cursor never
- * jumps; the parent receives the cleaned list. Text is only replaced when the value changes from outside.
+ * One item per line. The textarea is uncontrolled: React never writes to it while the user is typing, so the
+ * caret stays put on every browser (iPad Safari moves the caret to the end when a focused field's value is
+ * re-assigned during autocorrect/predictive input). The parent receives a cleaned list; the text is only
+ * replaced when the value changes from outside (e.g. the form is reset).
  */
 export function ListField({ label, hint, error, className, value, onChange, rows = 4, placeholder }: Base & { value: string[]; onChange(v: string[]): void; rows?: number; placeholder?: string }) {
-  const [text, setText] = useState(() => value.join('\n'));
-  const lastSent = useRef<string[]>(value);
-  if (JSON.stringify(value) !== JSON.stringify(lastSent.current) && JSON.stringify(value) !== JSON.stringify(parseListText(text))) {
-    lastSent.current = value;
-    setText(value.join('\n'));
-  }
+  const ref = useRef<HTMLTextAreaElement>(null);
+  const lastSent = useRef<string>(JSON.stringify(value));
+  const incoming = JSON.stringify(value);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || incoming === lastSent.current) return;
+    lastSent.current = incoming;
+    if (JSON.stringify(parseListText(el.value)) !== incoming) el.value = value.join('\n');
+  }, [incoming]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
-    <TextArea
-      label={label}
-      hint={hint ?? 'One item per line'}
-      error={error}
-      className={className}
-      rows={rows}
-      placeholder={placeholder}
-      value={text}
-      onChange={(v) => {
-        setText(v);
-        const list = parseListText(v);
-        lastSent.current = list;
-        onChange(list);
-      }}
-    />
+    <Field label={label} hint={hint ?? 'One item per line'} error={error} className={className}>
+      {(p) => (
+        <textarea
+          {...p}
+          ref={ref}
+          rows={rows}
+          placeholder={placeholder}
+          defaultValue={value.join('\n')}
+          onInput={(e) => {
+            const list = parseListText(e.currentTarget.value);
+            lastSent.current = JSON.stringify(list);
+            onChange(list);
+          }}
+          className={cn(control, 'py-2.5 leading-relaxed')}
+        />
+      )}
+    </Field>
   );
 }
 
